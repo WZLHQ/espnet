@@ -43,3 +43,4 @@ use_wordlm=false
     --asr_text_fold_length 150 \
     --lm_fold_length 150 \
     --lm_train_text "data/${train_set}/text" "$@"
+
