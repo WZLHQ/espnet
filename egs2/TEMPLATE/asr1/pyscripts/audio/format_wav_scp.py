@@ -256,7 +256,8 @@ def main():
             with Path(args.scp).open("r") as fscp:
                 for line in tqdm(fscp):
                     uttid, wavpath = line.strip().split(None, 1)
-
+                    # todo 这里的wavpath只包含”Audio/1007417/phase1/1007417_9f7817fd.wav“，而我们的数据集放在移动硬盘，需要添加一个主目录
+                    wavpath="/media/rosie/Samsung_T5/Data_set/speech_corpus/Kespeech/KeSpeech/KeSpeech/"+wavpath
                     # B.a. Without segments and using pipe inputs
                     if wavpath.endswith("|"):
                         if args.multi_columns_input:

@@ -1,0 +1,55 @@
+# 重写abs_task.py以及asr.py中的参数
+
+# network architecture
+## 1. speech encoder related
+#encoder: wav2vec2
+encoder: adapter_wav2vec2
+encoder_conf:
+    # input_size实际上在代码中没用上，或许是espnet还没更新完代码！
+    input_size: 80
+    # output_size如果是768，则压根不会收敛，loss很难收敛；目前512还是不错的，这个值就暂定了！
+    output_size: 512
+    w2v_url: https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_small.pt
+    w2v_dir_path: /home/rosie/DeepLearning/speech_recognition/FT_SSL_models/w2v2-new/huggingface_model/wav2vec_base_noFT # no fine-tuning
+    normalize_before: True
+    freeze_finetune_updates: 0
+
+# hybrid CTC/attention
+model_conf:
+    ctc_weight: 1.0
+    # lsm---->label smoothing rate
+    lsm_weight: 0.1
+    length_normalized_loss: false
+ctc_conf:
+    ignore_nan_grad: true
+
+# minibatch related
+batch_type: folded
+batch_size: 24
+
+# optimization for adapter-tuning
+optim: adam
+accum_grad: 1
+grad_clip: 5
+max_epoch: 100
+patience: 30
+optim_conf:
+    lr: 0.0005
+    weight_decay: 0.00001
+scheduler: CosineAnnealingLR # scheduler没有必要再去变化了，不然要重新做实验！
+scheduler_conf:
+    T_max: 100
+    eta_min: 0.0000001
+
+# plot related
+use_matplotlib: true
+num_att_plot: 0 # 默认为3
+
+# model selection
+best_model_criterion:
+-  - valid
+   - loss
+   - min
+keep_nbest_models: 2
+
+init: xavier_uniform # identity初始化反而效果稍微差一点点！

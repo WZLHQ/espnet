@@ -211,6 +211,7 @@ GRAMVAANI=downloads
 SPRING_INX=downloads
 VOXCELEB=
 KSPONSPEECH=
+KESPEECH=/media/rosie/Samsung_T5/Data_set/speech_corpus/Kespeech/KeSpeech/KeSpeech/Audio/
 
 # For only CMU TIR environment
 if [[ "$(hostname)" == tir* ]]; then
