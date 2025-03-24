@@ -165,6 +165,9 @@ asr_speech_fold_length=800 # fold_length for speech data during ASR training.
 asr_text_fold_length=150   # fold_length for text data during ASR training.
 lm_fold_length=150         # fold_length for LM training.
 
+# added by QH
+whisper_language=
+
 help_message=$(cat << EOF
 Usage: $0 --train-set "<train_set_name>" --valid-set "<valid_set_name>" --test_sets "<test_set_names>"
 
@@ -961,7 +964,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ] && ! [[ " ${skip_stages} " =~ [
         ${python} -m espnet2.bin.whisper_export_vocabulary  \
             --whisper_model "${token_type}" \
             --add_token_file_name "${nlsyms_txt}" \
-            --whisper_language "${lang}" \
+            --whisper_language "${whisper_language}" \
             --whisper_task "transcribe" \
             --sot_asr "${sot_asr}" \
             --output "${token_list}"
