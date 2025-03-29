@@ -69,8 +69,8 @@ use_adapter: true
 adapter: lora
 save_strategy: required_grad_only
 adapter_conf:
-    rank: 8
-    alpha: 8
+    rank: 128
+    alpha: 128
     dropout_rate: 0.05
     target_modules: ["query", "key", "value", "attn.out", "mlp.0", "mlp.2"]
 

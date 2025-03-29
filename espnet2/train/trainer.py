@@ -544,6 +544,21 @@ class Trainer:
                 nbest=keep_nbest_models,
             )
 
+        # added by QH
+        # delete saved n-best model to save space for non-PEFT methods
+        _removed = []
+        for e in nbests:
+            p = output_dir / f"{e}epoch.pth"
+            if p.exists():
+                p.unlink()
+                _removed.append(str(p))
+        if len(_removed) != 0:
+            logging.info("The model files were removed: " + ", ".join(_removed))
+            p = output_dir / f"{iepoch}epoch.pth"
+            if p.exists():
+                p.unlink()
+                logging.info(f"The model files were removed:{p}")
+
     @classmethod
     @typechecked
     def train_one_epoch(

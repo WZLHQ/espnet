@@ -49,7 +49,7 @@ num_workers: 4
 sort_in_batch: descending       # how to sort data in making batch
 sort_batch: descending          # how to sort created batches
 batch_type: folded
-batch_size: 96
+batch_size: 72
 accum_grad: 2
 max_epoch: 10
 patience: none
@@ -69,10 +69,10 @@ use_adapter: true
 adapter: lora
 save_strategy: required_grad_only
 adapter_conf:
-    rank: 8
-    alpha: 8
+    rank: 64
+    alpha: 64
     dropout_rate: 0.05
-    target_modules: ["query", "key", "value", "attn.out", "mlp.0", "mlp.2"]
+    target_modules: ["mlp.0", "mlp.2"]
 
 optim: adamw
 grad_clip: 1.0

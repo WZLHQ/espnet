@@ -12,9 +12,7 @@ log() {
 SECONDS=0
 
 corpus=$1
-corpus_path=$2 # the root path of your raw datasets
-# for CDSD, select from ["CDSD-partA", "CDSD-partA CDSD-partB"]
-# for AESRC, select from "US UK IND CHN JPN PT RU KR CA ES"
+corpus_path=$2
 data_sets=$3
 stage=1
 stop_stage=100000
@@ -46,17 +44,17 @@ if [[ "${corpus}" == *"CDSD"* ]] || [[ "${corpus}" == *"AESRC"* ]]; then
             if [[ "${corpus}" == *"CDSD"* ]]; then
                 
                 if [[ "${data_set}" == *"partA"* ]]; then # for partA
-                    local/data_prep.sh ${corpus_path}/CDSD-Interspeech/after_catting/1h ${data} ${corpus}
+                    local/local_for_AESRC_and_CDSD/data_prep.sh ${corpus_path}/CDSD-Interspeech/after_catting/1h ${data} ${corpus}
                 elif [[ "${data_set}" == *"partB"* ]]; then # for partB
-                    local/data_prep.sh ${corpus_path}/CDSD-Interspeech/after_catting/10h ${data} ${corpus}
+                    local/local_for_AESRC_and_CDSD/data_prep.sh ${corpus_path}/CDSD-Interspeech/after_catting/10h ${data} ${corpus}
                 fi
 
             elif [[ "${corpus}" == *"AESRC"* ]]; then
-                local/data_prep.sh ${corpus_path}/Datatang-English/data/${data_set} ${data} ${corpus}
+                local/local_for_AESRC_and_CDSD/data_prep.sh ${corpus_path}/Datatang-English/data/${data_set} ${data} ${corpus}
             fi
 
             ./utils/fix_data_dir.sh ${data}/data_all
-            local/create_subsets.sh ${data} "${data_set}"
+            local/local_for_AESRC_and_CDSD/create_subsets.sh ${data} "${data_set}"
             rm -rf ${data}/data_all
             rm -rf ${data}/cv.scp ${data}/train_and_dev.scp ${data}/dev.scp ${data}/train.scp ${data}/cv
 

@@ -18,5 +18,5 @@ mv $raw_data/Korean\ Speaking\ English\ Speech\ Data $raw_data/KR
 mv $raw_data/Canadian\ English\ Speech\ Data $raw_data/CA
 mv $raw_data/Spanish\ Speaking\ English\ Speech\ Data $raw_data/ES
 
-echo "local/download_and_untar.sh succeeded"
+echo "local/local_for_AESRC_and_CDSD/download_and_untar.sh succeeded"
 exit 0;

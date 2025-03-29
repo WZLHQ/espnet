@@ -1,0 +1,4 @@
+1. 优化一下CDSD/AESRC在第一阶段的代码，感觉有些许逻辑不清晰。
+2. CDSD的数据提取阶段还是有问题，speaker提取的不对，可能需要修改下“preprocess_for_CDSD.py”这个文件
+3. 赶快重新跑一下CDSD各个子集（包括已经跑完的partA）的stage1~5，然后把CDSD这个原始数据删除，因为这个数据集太占inodes了
+

@@ -114,3 +114,14 @@ tools/Miniconda3-latest-*.sh
 tools/Miniforge3-*.sh
 tools/condarc
 tools/lightning_constraints.txt
+
+# added by QH
+# for the current recipe
+egs2/pefts/asr1/Archive
+egs2/pefts/asr1/espnet_outputs
+egs2/pefts/asr1/pefts-espnet
+egs2/pefts/asr1/pefts-espnet2
+egs2/pefts/asr1/pefts-loralib
+egs2/pefts/asr1/pefts-peft
+egs2/pefts/asr1/pefts-transformers
+egs2/pefts/asr1/pefts-whisper

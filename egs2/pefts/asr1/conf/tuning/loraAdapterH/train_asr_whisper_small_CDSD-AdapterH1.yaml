@@ -66,12 +66,15 @@ cudnn_benchmark: false
 
 # LoRA finetune related
 use_adapter: true
-adapter: lora
+adapter: lora_houlsby
 save_strategy: required_grad_only
 adapter_conf:
-    rank: 8
-    alpha: 8
+    use_lora: false
+    rank: 192 # since use_lora=false, rank and alpha make no sense
+    alpha: 192 # since use_lora=false, rank and alpha make no sense
     dropout_rate: 0.05
+    bottleneck: 35
+    adapterH_dropout: 0.05
     target_modules: ["query", "key", "value", "attn.out", "mlp.0", "mlp.2"]
 
 optim: adamw

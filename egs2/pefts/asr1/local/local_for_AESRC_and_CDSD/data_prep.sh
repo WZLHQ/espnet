@@ -21,9 +21,9 @@ if [ -d ${raw_data} ];then
 
     # faster than for in shell
     if [[ "${corpus}" == *"CDSD"* ]]; then
-        python local/preprocess_for_CDSD.py $data/data_all/wav.scp $data/data_all/trans $data/data_all/utt2spk
+        python local/local_for_AESRC_and_CDSD/preprocess_for_CDSD.py $data/data_all/wav.scp $data/data_all/trans $data/data_all/utt2spk
     elif [[ "${corpus}" == *"AESRC"* ]]; then
-        python local/preprocess_for_AESRC.py $data/data_all/wav.scp $data/data_all/trans $data/data_all/utt2spk
+        python local/local_for_AESRC_and_CDSD/preprocess_for_AESRC.py $data/data_all/wav.scp $data/data_all/trans $data/data_all/utt2spk
     elif [[ "${corpus}" == *"Librispeech"* ]]; then
         echo ""
     fi
@@ -53,5 +53,5 @@ if [ -d $data/data_all ];then
     sed -e "s/\t/ /g" -i $data/data_all/text
 fi
 
-echo "local/data_prep.sh succeeded"
+echo "local/local_for_AESRC_and_CDSD/data_prep.sh succeeded"
 exit 0;
