@@ -73,4 +73,5 @@
         self._accessor.mkdir(self, mode)
     OSError: [Errno 28] No space left on device: '/root/autodl-fs/espnet_outputs/Librilight10_LoRA_outputs/asr_train_asr_whisper_small_Librilight10-A3_raw_Librilight10_whisper_multilingual/decode_asr_whisper_noctc_beam3_maxlenratio0.25_asr_model_valid.acc.ave/Librispeech_valid_other/logdir/output.6/1best_recog'
 
-4. 
+4. 如果发现VSCODE不能提交远程，先运行以下代码即可
+    source /etc/network_turbo
