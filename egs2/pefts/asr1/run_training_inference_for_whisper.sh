@@ -37,7 +37,7 @@ set -o pipefail
 # ./run_training_inference_for_whisper.sh Librilight10 Librilight10 en LoRA whisper_small "C1 C2 C3 C4 C5 C6" 11 13 4
 
 #---------------------training---------------------#
-# ./run_training_inference_for_whisper.sh CDSD-partA zh LoRA whisper_small A1 13 13 4
+# ./run_training_inference_for_whisper.sh Librilight10 en loraAdapterH whisper_small "A1 A2 A3 A4 A5 A6 B1 B2 B3 B4 B5 B6 C1 C2 C3 C4 C5 C6" 11 13 4
 
 # specify gpu id
 export CUDA_VISIBLE_DEVICES=0

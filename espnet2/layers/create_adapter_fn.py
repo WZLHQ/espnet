@@ -279,7 +279,8 @@ def create_lora_houslby_adapter(
     # for adapter
     bottleneck: int = 128,
     adapterH_dropout: float = 0.0,
-    target_modules: List[str] = ["query"],
+    target_modules: List[str] = ["query"], # for LoRA by default
+    target_modules_for_adapterh: List[str] = ["attn.out", "mlp.2"], # for adapter by default
     bias_type: Optional[str] = "none",
 ):
     """Create LoRA adapter for the base model.
@@ -326,8 +327,7 @@ def create_lora_houslby_adapter(
 
         if not isinstance(target_module, lora.LoRALayer):
 
-            # we only add the houslby adapter to the "attn.out" and "mlp.2" in whisper models
-            if "attn.out" in key or "mlp.2" in key:
+            if any(element in key for element in target_modules_for_adapterh):
                 use_houslby=True
                 new_module = create_new_lora_houslby_module(
                     target_module, use_lora, rank, alpha, dropout_rate, use_houslby, bottleneck, adapterH_dropout
