@@ -12,7 +12,7 @@ set -o pipefail
 
 #------------------Now only suport CDSD, AESRC, Librispeech100, Librilight10-------------------#
 # TODO: Add Aishell1, Kespeech, Fleurs.
-corpus=Librilight10
+corpus=CDSD
 
 # select from [whisper_multilingual, bpe, char]
 token_type=whisper_multilingual
@@ -82,7 +82,7 @@ for subset in ${data_sets}; do
 
     ./asr.sh \
         --stage 1 \
-        --stop_stage 5 \
+        --stop_stage 1 \
         --skip_data_prep false \
         --skip_train false \
         --skip_eval false \

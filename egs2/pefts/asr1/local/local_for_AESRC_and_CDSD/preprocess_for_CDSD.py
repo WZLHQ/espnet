@@ -42,8 +42,10 @@ fout_utt2spk = open(sys.argv[3], "w")
 for line in fin.readlines():
     uttid, path = line.strip("\n").split("\t")
     '''
+    # e.g. 
     uttid: Audio-19-S019T024E000N00022
-    path: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_datasets/CDSD/CDSD-Interspeech/after_catting/1h/Audio/19/S019T024E000N00022.wav
+    path: /**/**/CDSD/CDSD-Interspeech/after_catting/1h/Audio/19/S019T024E000N00022.wav
+    spkid: 19
     '''
     speaker_id=path.split("/")[-2]
     wav_id=path.split("/")[-1].rstrip(".wav")
@@ -55,8 +57,5 @@ for line in fin.readlines():
     text_ori=get_text_by_wav_id(wav_id,mapping)
     assert text_ori is not None, "speaker_id={}; wav_id={}".format(speaker_id,wav_id)
 
-    feild = path.split("/")
-    accid = feild[-4]
-    spkid = accid + "-" + feild[-2]
-    fout_utt2spk.write(uttid + "\t" + spkid + "\n")
+    fout_utt2spk.write(uttid + "\t" + speaker_id + "\n")
     fout_text.write(text_ori + "\n")
