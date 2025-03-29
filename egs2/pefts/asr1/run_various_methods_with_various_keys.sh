@@ -17,7 +17,7 @@ do
 
   for key in "${keys}"
   do
-    ./run_training_inference_for_whisper.sh Librilight10 Librilight10 en ${methods} whisper_small "${key}" 10 13 4
+    ./run_training_inference_for_whisper.sh Librilight10 en ${methods} whisper_small "${key}" 10 13 4
   done
 
 done

@@ -81,8 +81,8 @@ for subset in ${data_sets}; do
     fi
 
     ./asr.sh \
-        --stage 1 \
-        --stop_stage 1 \
+        --stage 2 \
+        --stop_stage 5 \
         --skip_data_prep false \
         --skip_train false \
         --skip_eval false \

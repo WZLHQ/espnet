@@ -7,8 +7,8 @@ set -o pipefail
 
 
 #----------------------------template-------------------------------#
-#                                          --corpus---subcorpus----whisper_language--method-----model------keynum--start_stage--stop_stage
-# ./run_training_inference_for_whisper.sh    CDSD   "CDSD-partA"        zh          LoRA  whisper_small    TEST       10           13
+#                                          ---subcorpus----whisper_language--method-----model------keynum--start_stage--stop_stage
+# ./run_training_inference_for_whisper.sh    "CDSD-partA"        zh          LoRA  whisper_small    TEST       10           13
 
 #----------------------------run logs-------------------------------#
 # ./run_training_inference_for_whisper.sh CDSD CDSD-partA zh LoRA whisper_small A1-B1 11 13
@@ -34,48 +34,42 @@ set -o pipefail
 # ./run_training_inference_for_whisper.sh Librilight10 Librilight10 en LoRA whisper_small A6 12 13; 
 # ./run_training_inference_for_whisper.sh Librilight10 Librilight10 en LoRA whisper_small "A4 A5 A6" 12 13 2
 # ./run_training_inference_for_whisper.sh Librilight10 Librilight10 en LoRA whisper_small "B1 B2 B3 B4 B5 B6" 11 13 2
+# ./run_training_inference_for_whisper.sh Librilight10 Librilight10 en LoRA whisper_small "C1 C2 C3 C4 C5 C6" 11 13 4
 
 #---------------------training---------------------#
-# ./run_training_inference_for_whisper.sh Librilight10 Librilight10 en LoRA whisper_small "C1 C2 C3 C4 C5 C6" 11 13 4
-# 
+# ./run_training_inference_for_whisper.sh CDSD-partA zh LoRA whisper_small A1 13 13 4
 
 # specify gpu id
 export CUDA_VISIBLE_DEVICES=0
 
-# select from [CDSD, Librispeech100, Librilight10]
-# TODO: Add KeSpeech, Aishell-1, AESRC, ...
-corpus=$1
-
-# for CDSD, select from ["CDSD-partA", "CDSD-partB", "CDSD-partA CDSD-partB", "CDSD"], NOTE that "CDSD" contains both partA and partB
-# for Librispeech100, subcorpus=Librispeech100
-# for Librilight10, subcorpus=Librilight10
-subcorpus=$2
+# select from [CDSD-partA, Librispeech100, Librilight10] or any combination of them
+subcorpus=$1
 
 # ATTENTION: for english corpus, whisper_language=en; for Chinese corpus, whisper_language=zh
-whisper_language=$3
+whisper_language=$2
 
 # select a method from [LoRA, MosLoRA, MeLoRA, loraAdapterH, ...]
 # NOTE that loraAdapterH denotes LoRA combines houslby adapter
 # TODO add FT, Houlsby_Adapter, MeLoRA, VeRA, LanFusion, CAM, and so on.
-method=$4
+method=$3
 
 # select from [whisper_small, whisper_medium, whisper_large, ...]
-model=$5
+model=$4
 
 # assign a special key for each experiment
-key=$6
+key=$5
 
 # [10, 11, 12, 13]
-start_stage=$7
-stop_stage=$8
+start_stage=$6
+stop_stage=$7
 
 # depends on backbone model size
 # for whisper_small, inference_nj=8
-inference_nj=$9
+inference_nj=$8
 
 # output dir
 explink=/root/autodl-fs/espnet_outputs
-expdir=${explink}/${corpus}_"${method}"_outputs
+expdir=${explink}/${subcorpus}_"${method}"_outputs
 # 检查文件夹是否存在
 if [ ! -d "$expdir" ]; then
   # 如果文件夹不存在，则创建文件夹
@@ -93,16 +87,16 @@ fi
 if [[ "$model" == *"w2v2"* ]] || [[ "$model" == *"hubert"* ]]; then
     inference_config="conf/decoding/decode_asr_SSL_ctc_beam3.yaml"
     inference_asr_model=valid.loss.ave.pth
-    if [[ "${corpus}" == "AESRC" ]]; then
+    if [[ "${subcorpus}" == *"AESRC"* ]]; then
       token_type=bpe
     else
       token_type=char
     fi
 elif [[ "$model" == *"whisper"* ]]; then
-    if [[ "${corpus}" == "AESRC" ]]; then
+    if [[ "${subcorpus}" == *"AESRC"* ]]; then
       # we change maxlenratio from 0.3 to 0.25, since 0.3 causes cuda-out-of-memory
       inference_config="conf/decoding/decode_asr_whisper_noctc_beam3_maxlenratio0.25.yaml"
-    elif [[ "${corpus}" == *"Libri"* ]]; then
+    elif [[ "${subcorpus}" == *"Libri"* ]]; then
       # we change maxlenratio from 0.3 to 0.25, since 0.3 causes cuda-out-of-memory
       inference_config="conf/decoding/decode_asr_whisper_noctc_beam3_maxlenratio0.25.yaml"
     else
@@ -128,21 +122,21 @@ for sub in "${subcorpus}"
 do
 
   # dataset
-  if [[ "${corpus}" == *"AESRC"* ]]; then
+  if [[ "${sub}" == *"AESRC"* ]]; then
     train_set="${sub}_train"
     train_dev="${sub}_valid"
     test_set="${sub}_valid ${sub}_test"
     # 150 for each accent; 5000 for all combined accents
     nbpe=150
 
-  elif [[ ${sub} == *"Libri"* ]]; then
+  elif [[ "${sub}" == *"Libri"* ]]; then
     train_set="${sub}_train"
     train_dev="Librispeech_valid"
     # test_set="Librispeech_valid_clean Librispeech_valid_other Librispeech_test_clean Librispeech_test_other"
     test_set="Librispeech_test_clean Librispeech_test_other"
     nbpe=5000 # TODO need to verify
 
-  elif [[ "${corpus}" == *"CDSD"* ]]; then
+  elif [[ "${sub}" == *"CDSD"* ]]; then
     train_set="${sub}_train"
     train_dev="${sub}_valid"
     test_set="${sub}_valid ${sub}_test"
@@ -161,7 +155,7 @@ do
   do
 
     # corresponding config file, need manually create
-    asr_config=conf/tuning/${method}/train_asr_${model}_${subcorpus}-${k}.yaml
+    asr_config=conf/tuning/${method}/train_asr_${model}_${sub}-${k}.yaml
 
     ./asr.sh \
         --nj 32 \
