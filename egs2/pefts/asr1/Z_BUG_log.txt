@@ -75,3 +75,6 @@
 
 4. 如果发现VSCODE不能提交远程，先运行以下代码即可
     source /etc/network_turbo
+
+5. 在跑CDSD-partB第一阶段时，发现kaldi格式的数据量（约为4w条）与原始数据（约为9.2w条）不一致，检查后发现*/10h/Text/中“20-label.txt”不对，需改为“20_label.txt”
+   这样改完就好了

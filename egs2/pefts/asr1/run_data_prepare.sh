@@ -6,8 +6,10 @@ set -u
 set -o pipefail
 
 #----------------------------Attention---------------------------#
-# the local_for_** are copied from other recipes and we assume that path.sh of it is empty
-# if path.sh is not empty, you are supposed to add its path in ./path.sh
+# 1. the local_for_** are copied from other recipes and we assume that path.sh of it is empty
+#    if path.sh is not empty, you are supposed to add its path in ./path.sh
+# 2. for CDSD-partA, since there are 44 speakers, therefore we randomly select 4 speakers for test set, and the others are split 95-5 for train and dev sets.
+#    for CDSD-partB, since there are only 8 speakers (each contributes 10h, totally 80h), therefore we roughly split the whole data by 76h-2h-2h.
 
 
 #------------------Now only suport CDSD, AESRC, Librispeech100, Librilight10-------------------#
@@ -22,7 +24,7 @@ if [[ "${corpus}" == *"CDSD"* ]]; then
     # $data_sets are selected from ["CDSD-partA", "CDSD-partB", "CDSD-partA CDSD-partB"]
     # corpus_path is "/autodl-fs/data/corora"
     local_data_dir=local/local_for_AESRC_and_CDSD
-    data_sets="CDSD-partA"
+    data_sets="CDSD-partB"
     corpus_path=/autodl-fs/data/corora
     local_data_opts="--corpus ${corpus} --corpus_path ${corpus_path} --data_sets ${data_sets}"
     whisper_language=zh
@@ -81,14 +83,14 @@ for subset in ${data_sets}; do
     fi
 
     ./asr.sh \
-        --stage 2 \
+        --stage 1 \
         --stop_stage 5 \
         --skip_data_prep false \
         --skip_train false \
         --skip_eval false \
         --lang "${subset}" \
         --ngpu 1 \
-        --nj 12 \
+        --nj 32 \
         --inference_nj 32 \
         --local_data_dir ${local_data_dir} \
         --nbpe "${nbpe}" \

@@ -49,7 +49,7 @@ num_workers: 4
 sort_in_batch: descending       # how to sort data in making batch
 sort_batch: descending          # how to sort created batches
 batch_type: folded
-batch_size: 96
+batch_size: 72
 accum_grad: 2
 max_epoch: 10
 patience: none

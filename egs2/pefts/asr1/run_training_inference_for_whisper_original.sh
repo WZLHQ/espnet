@@ -38,8 +38,8 @@ set -o pipefail
 # ./run_training_inference_for_whisper.sh Librilight10 en loraAdapterH whisper_small "A1 A2 A3 A4 A5 A6 B1 B2 B3 B4 B5 B6 C1 C2 C3 C4 C5 C6" 11 13 4
 
 #---------------------training---------------------#
-# ./run_training_inference_for_whisper.sh "CDSD-partA CDSD-partB" FT whisper_small A1 11 13 4
-# ./run_training_inference_for_whisper.sh "CDSD-partA CDSD-partB" FT whisper_small A2 11 13 4
+# ./run_training_inference_for_whisper.sh "CDSD-partA CDSD-partB" zh FT whisper_small A1 10 13 4
+
 
 # specify gpu id
 export CUDA_VISIBLE_DEVICES=0
@@ -47,27 +47,37 @@ export CUDA_VISIBLE_DEVICES=0
 # select from [CDSD-partA, CDSD-partB, Librispeech100, Librilight10] or any combination of them
 subcorpus=$1
 
+# ATTENTION: for english corpus, whisper_language=en; for Chinese corpus, whisper_language=zh
+whisper_language=$2
+
 # select a method from [FT, LoRA, MosLoRA, MeLoRA, loraAdapterH, ...]
 # NOTE that loraAdapterH denotes LoRA combines houslby adapter; FT denotes full-model fine-tuning
 # TODO add FT, Houlsby_Adapter, MeLoRA, VeRA, LanFusion, CAM, and so on.
-method=$2
+method=$3
 
 # select from [whisper_small, whisper_medium, whisper_large, ...]
-model=$3
+model=$4
 
 # assign a special key for each experiment
-key=$4
+key=$5
 
 # [10, 11, 12, 13]
-start_stage=$5
-stop_stage=$6
+start_stage=$6
+stop_stage=$7
 
 # depends on backbone model size
 # for whisper_small, inference_nj=8
-inference_nj=$7
+inference_nj=$8
 
-# output dir that contains all experiments
+# output dir
 explink=/root/autodl-fs/espnet_outputs
+expdir=${explink}/${subcorpus}_"${method}"_outputs
+# 检查文件夹是否存在
+if [ ! -d "$expdir" ]; then
+  # 如果文件夹不存在，则创建文件夹
+  mkdir "$expdir"
+  echo "文件夹 $expdir 已创建."
+fi
 # 检查软连接是否存在
 if [ ! -d "espnet_outputs" ]; then
   # 如果文件夹不存在，则创建文件夹
@@ -75,62 +85,72 @@ if [ ! -d "espnet_outputs" ]; then
   echo "软连接$explink 已创建."
 fi
 
-# decoding and other configures if exits
+# LM/ASR/decoding configuration
+if [[ "$model" == *"w2v2"* ]] || [[ "$model" == *"hubert"* ]]; then
+    inference_config="conf/decoding/decode_asr_SSL_ctc_beam3.yaml"
+    inference_asr_model=valid.loss.ave.pth
+    if [[ "${subcorpus}" == *"AESRC"* ]]; then
+      token_type=bpe
+    else
+      token_type=char
+    fi
+elif [[ "$model" == *"whisper"* ]]; then
+    if [[ "${subcorpus}" == *"AESRC"* ]]; then
+      # we change maxlenratio from 0.3 to 0.25, since 0.3 causes cuda-out-of-memory
+      inference_config="conf/decoding/decode_asr_whisper_noctc_beam3_maxlenratio0.25.yaml"
+    elif [[ "${subcorpus}" == *"Libri"* ]]; then
+      # we change maxlenratio from 0.3 to 0.25, since 0.3 causes cuda-out-of-memory
+      inference_config="conf/decoding/decode_asr_whisper_noctc_beam3_maxlenratio0.25.yaml"
+    else
+      inference_config="conf/decoding/decode_asr_whisper_noctc_beam3.yaml" # maxlenratio is 0.3
+    fi
+    inference_asr_model=valid.acc.ave.pth
+    token_type=whisper_multilingual
+else
+    echo "Model not recognized. Please check the model name."
+    exit 1
+fi
+
+# decoding
 decode_batch_size=1
+# Other configures if exits
 use_lm=false
 use_wordlm=false
 use_ngram=false
 lm_config=conf/LM/train_lm_transformer.yaml
 inference_lm=valid.loss.ave.pth
 
-for sub in ${subcorpus}
+for sub in "${subcorpus}"
 do
 
-  # LM/ASR/decoding configuration
-  if [[ "$model" == *"w2v2"* ]] || [[ "$model" == *"hubert"* ]]; then
-      inference_asr_model=valid.loss.ave.pth
-      inference_config="conf/decoding/decode_asr_SSL_ctc_beam3.yaml"
-      # token_type=char or bpe ?
-      echo "token_type should be depended on the corpus"
-      exit 1
-  elif [[ "$model" == *"whisper"* ]]; then
-      if [[ "${sub}" == *"Libri"* ]]; then
-        # we change maxlenratio from 0.3 to 0.25, since 0.3 causes cuda-out-of-memory
-        inference_config="conf/decoding/decode_asr_whisper_noctc_beam3_maxlenratio0.25.yaml"
-      else
-        inference_config="conf/decoding/decode_asr_whisper_noctc_beam3.yaml" # maxlenratio is 0.3
-      fi
-      inference_asr_model=valid.acc.ave.pth
-      token_type=whisper_multilingual
-  else
-      echo "Model not recognized. Please check the model name."
-      exit 1
-  fi
-
-  # output dir for current experiment
-  expdir=${explink}/${sub}_"${method}"_outputs
-  # 检查文件夹是否存在
-  if [ ! -d "$expdir" ]; then
-    # 如果文件夹不存在，则创建文件夹
-    mkdir "$expdir"
-    echo "文件夹 $expdir 已创建."
-  fi
-
   # dataset
-  if [[ "${sub}" == *"Libri"* ]]; then
+  if [[ "${sub}" == *"AESRC"* ]]; then
+    train_set="${sub}_train"
+    train_dev="${sub}_valid"
+    test_set="${sub}_valid ${sub}_test"
+    # 150 for each accent; 5000 for all combined accents
+    nbpe=150
+
+  elif [[ "${sub}" == *"Libri"* ]]; then
     train_set="${sub}_train"
     train_dev="Librispeech_valid"
     # test_set="Librispeech_valid_clean Librispeech_valid_other Librispeech_test_clean Librispeech_test_other"
     test_set="Librispeech_test_clean Librispeech_test_other"
-    nbpe=5000 # only if token_type=bpe
+    nbpe=5000 # TODO need to verify
 
-  else
+  elif [[ "${sub}" == *"CDSD"* ]]; then
     train_set="${sub}_train"
     train_dev="${sub}_valid"
     test_set="${sub}_valid ${sub}_test"
-    # if token_type=bpe, nbpe should be depended on the corpus. for example, nbpe=150 for each accent of AESRC; nbpe=5000 for all combined accents of AESRC
+    # PBE is not for CDSD, therefor it does not make any sense. we set nbpe to 30 to prevent from complain
     nbpe=30
 
+  else
+    # TODO need to verify
+    train_set=train_${sub}
+    train_dev=dev_${sub}
+    test_set="${train_dev} test_$sub"
+    nbpe=30
   fi
 
   for k in ${key}
@@ -154,6 +174,7 @@ do
         --stop_stage $stop_stage \
         --lang ${sub} \
         --batch_size ${decode_batch_size} \
+        --whisper_language ${whisper_language} \
         --audio_format "flac.ark" \
         --feats_type raw \
         --nbpe ${nbpe} \
