@@ -36,15 +36,18 @@ set -o pipefail
 # ./run_training_inference_for_whisper.sh Librilight10 Librilight10 en LoRA whisper_small "B1 B2 B3 B4 B5 B6" 11 13 2
 # ./run_training_inference_for_whisper.sh Librilight10 Librilight10 en LoRA whisper_small "C1 C2 C3 C4 C5 C6" 11 13 4
 # ./run_training_inference_for_whisper.sh Librilight10 en loraAdapterH whisper_small "A1 A2 A3 A4 A5 A6 B1 B2 B3 B4 B5 B6 C1 C2 C3 C4 C5 C6" 11 13 4
-
-#---------------------training---------------------#
 # ./run_training_inference_for_whisper.sh "CDSD-partA CDSD-partB" FT whisper_small A1 11 13 4
 # ./run_training_inference_for_whisper.sh "CDSD-partA CDSD-partB" FT whisper_small A2 11 13 4
+# ./run_training_inference_for_whisper.sh "CDSD-partA CDSD-partB" FT whisper_small A3 11 13 4
+
+#---------------------training---------------------#
+# ./run_training_inference_for_whisper.sh "CDSD-partA" LoRA whisper_small "A1 A2 A3 A4" 11 13 4
+# ./run_training_inference_for_whisper.sh "CDSD-partB" LoRA whisper_small "A1 A2 A3 A4 A5 A6" 11 13 4
 
 # specify gpu id
 export CUDA_VISIBLE_DEVICES=0
 
-# select from [CDSD-partA, CDSD-partB, Librispeech100, Librilight10] or any combination of them
+# select from [CDSD-partA, CDSD-partB, Librilight10, Librispeech100] or any combination of them
 subcorpus=$1
 
 # select a method from [FT, LoRA, MosLoRA, MeLoRA, loraAdapterH, ...]
@@ -136,14 +139,8 @@ do
   for k in ${key}
   do
 
-    # corresponding config file, need manually create
-    asr_config=conf/tuning/${method}/train_asr_${model}_${sub}-${k}.yaml
-
-    #---------------自动生成yaml脚本的处理逻辑-----------------#
-    # 0. Does conf/tuning/${method} exit?
-    # 1.如果asr_config不存在，则按照传入的参数创建相应文件
-    # 2.如果存在，则要检查与传入的参数是否相符？
-    # 3.相符则可用，不相符是替换还是用旧的？
+    yaml_path=conf/tuning/${method}
+    asr_config=${yaml_path}/train_asr_${model}_${sub}-${k}.yaml
 
     ./asr.sh \
         --nj 32 \
