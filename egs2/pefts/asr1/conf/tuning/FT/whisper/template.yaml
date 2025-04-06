@@ -51,7 +51,7 @@ sort_batch: descending          # how to sort created batches
 batch_type: folded
 batch_size: 72
 accum_grad: 2
-max_epoch: 10
+max_epoch: 5
 patience: none
 init: none
 best_model_criterion:
@@ -64,20 +64,10 @@ use_amp: true
 cudnn_deterministic: false
 cudnn_benchmark: false
 
-# LoRA finetune related
-use_adapter: true
-adapter: lora
-save_strategy: required_grad_only
-adapter_conf:
-    rank: 8
-    alpha: 8
-    dropout_rate: 0.05
-    target_modules: ["query", "key", "value", "attn.out"]
-
 optim: adamw
 grad_clip: 1.0
 optim_conf:
-    lr: 5.0e-04
+    lr: 5.0e-05
     weight_decay: 0.01
     betas:
     - 0.9

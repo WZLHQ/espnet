@@ -39,13 +39,18 @@ set -o pipefail
 # ./run_training_inference_for_whisper.sh "CDSD-partA CDSD-partB" FT whisper_small A1 11 13 4
 # ./run_training_inference_for_whisper.sh "CDSD-partA CDSD-partB" FT whisper_small A2 11 13 4
 # ./run_training_inference_for_whisper.sh "CDSD-partA CDSD-partB" FT whisper_small A3 11 13 4
-
-#---------------------training---------------------#
 # ./run_training_inference_for_whisper.sh "CDSD-partA" LoRA whisper_small "A1 A2 A3 A4" 11 13 4
 # ./run_training_inference_for_whisper.sh "CDSD-partB" LoRA whisper_small "A1 A2 A3 A4 A5 A6" 11 13 4
+# ./run_training_inference_for_whisper.sh "CDSD-partA" LoRA whisper_small "A1 A2 A3 A4" 10 13 4
+# ./run_training_inference_for_whisper.sh "CDSD-partB" LoRA whisper_small "A3 A4 A5 A6" 11 13 4
+# ./run_training_inference_for_whisper.sh "Librilight10" FT whisper_small A1 11 13 4
+
+#---------------------training---------------------#
+# ./run_training_inference_for_whisper.sh "CDSD-partB" loraAdapterH whisper_small "AdapterH1 AdapterH2 AdapterH3 AdapterH4 AdapterH5 AdapterH6" 11 13 4
+# ./run_training_inference_for_whisper.sh "Librilight10" FT whisper_small A2 11 13 4
 
 # specify gpu id
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 # select from [CDSD-partA, CDSD-partB, Librilight10, Librispeech100] or any combination of them
 subcorpus=$1
@@ -70,11 +75,11 @@ stop_stage=$6
 inference_nj=$7
 
 # output dir that contains all experiments
-explink=/root/autodl-fs/espnet_outputs
+explink=/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_new
 # 检查软连接是否存在
-if [ ! -d "espnet_outputs" ]; then
+if [ ! -d "espnet_outputs_new" ]; then
   # 如果文件夹不存在，则创建文件夹
-  ln -s $explink espnet_outputs
+  ln -s $explink espnet_outputs_new
   echo "软连接$explink 已创建."
 fi
 
@@ -111,7 +116,7 @@ do
   fi
 
   # output dir for current experiment
-  expdir=${explink}/${sub}_"${method}"_outputs
+  expdir=${explink}/${sub}_"${model}"_"${method}"_outputs
   # 检查文件夹是否存在
   if [ ! -d "$expdir" ]; then
     # 如果文件夹不存在，则创建文件夹
