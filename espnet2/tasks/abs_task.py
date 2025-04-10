@@ -1373,6 +1373,18 @@ class AbsTask(ABC):
             # Use adapter to finetune the large pre-trained foundation models
             if getattr(args, "use_adapter", False):
                 create_adapter(model, args.adapter, args.adapter_conf)
+                if args.encoder=="hubert" or args.encoder=="wav2vec2":
+                    # for hubert and wav2vec2, there is a output layer and a ctc head that should be trainable
+                    for p in model.encoder.output_layer.parameters():
+                        p.requires_grad = True
+                    for p in model.ctc.parameters():
+                        p.requires_grad = True
+                elif args.encoder=="whisper":
+                    # nothing to do with whisper.
+                    pass
+                else:
+                    # it depends on the specific models
+                    NotImplementedError("args.encoder{} is not recognized".format(args.encoder))
 
             # 3. Build optimizer
             optimizers = cls.build_optimizers(args, model=model)

@@ -10,14 +10,14 @@ set -o pipefail
 #    if path.sh is not empty, you are supposed to add its path in ./path.sh
 # 2. for CDSD-partA, since there are 44 speakers, therefore we randomly select 4 speakers for test set, and the others are split 95-5 for train and dev sets.
 #    for CDSD-partB, since there are only 8 speakers (each contributes 10h, totally 80h), therefore we roughly split the whole data by 76h-2h-2h.
-
+# 3. if token_type=char, then re-run both stage 4 and stage 5.
 
 #------------------Now only suport CDSD, AESRC, Librispeech100, Librilight10-------------------#
 # TODO: Add Aishell1, Kespeech, Fleurs.
-corpus=Librilight10
+corpus=CDSD
 
 # select from [whisper_multilingual, bpe, char]
-token_type=whisper_multilingual
+token_type=char
 
 if [[ "${corpus}" == *"CDSD"* ]]; then
     #--------------for CDSD-----------------#
@@ -59,15 +59,8 @@ for subset in ${data_sets}; do
     
     if [[ "${token_type}" == *"bpe"* ]]; then
         
-        # example: 
-        # if [[ "${subset}" == *"combined"* ]]; then
-        #     nbpe=5000
-        # else
-        #     nbpe=150
-        # fi
-
-        echo "nbpe depends on the corpus type"
-        exit 1
+        nbpe=300 # for Librilight10
+        # nbpe=5000 # for Librispeech100 
     else
         nbpe=1
     fi
@@ -83,7 +76,7 @@ for subset in ${data_sets}; do
     fi
 
     ./asr.sh \
-        --stage 1 \
+        --stage 4 \
         --stop_stage 5 \
         --skip_data_prep false \
         --skip_train false \
