@@ -56,26 +56,13 @@ source /etc/network_turbo
 6. fairseq installation following "./installers/install_fairseq.sh" causes bugs when nets training. We solve this by simply replacing the "./tools/fairseq" file with the correspoding ones that download from official fairseq. However, another BUG appears: the token ID seems only cover 1 and 8. This leads to failure of training. We find out that in the run.sh, we apply --cleaner whisper_basic for both SSL models and whisper models.
 Note that the whisper_basic is specifical for whisper models. For SSL models, we set cleaner to "none". BUG solved!
 7. the func "make_pad_mask" from espnet2.asr.encoder.hubert_encoder causes CUDA out of memory. We replace it with self.easy_make_pad_mask() which is writed by myself.
-8. Error while loading conda entry point.
+8. Error while loading conda entry point. And the following instructions might solve this issue.
 ```
 conda-libmamba-solver (libarchive.so.20: cannot open shared object file: No such file or directory)  
 
 CondaValueError: You have chosen a non-default solver backend (libmamba) but it was not recognized. Choose one of: classic
 ```
-```
-The following instructions might solve this issue:
-1. conda activate your-conda-environment-name
-2. uninstall libarchive, conda-libmamba-solver, and libmamba
-3. open /root/.condarc, and comment out the original channels and add the new channels as follows:
-    channels:
-    - https://software.repos.intel.com/python/conda/
-    - conda-forge
-    # - https://software.repos.intel.com/python/conda/
-    # - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
-    # - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
-    # - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
-    # - defaults
-    show_channel_urls: true
-4. conda install libarchive, conda-libmamba-solver, and libmamba
-*Note that this solution might cause other issues
+
+```bash
+conda update --all  --solver=classic
 ```
