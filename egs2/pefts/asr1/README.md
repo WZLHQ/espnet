@@ -67,8 +67,8 @@ cd <espnet-root>/tools
 
 ## 3 Usage on VS Code
 We create a "PEFTs" branch from the master branch. And in "pefts" branch, we create a new recipe named "pefts" in which all the experiments are conducted. So the usage is as follows:
-1. Open <espnet-root>/egs2/pefts/asr1 in VS Code
-2. Checkout to "pefts" branch
+1. Checkout to "pefts" branch
+2. Open <espnet-root>/egs2/pefts/asr1 in VS Code
 3. Set soft links as follows:
 ```bash
 cd <espnet-root>/egs2/pefts/asr1
