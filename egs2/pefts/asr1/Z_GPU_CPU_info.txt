@@ -1,7 +1,0 @@
-如果要复现，参考以下软硬件环境
-1 GPU以及驱动信息
-    GPU：4090 24G
-    GPU驱动：550.90.07
-    CUDA版本：≤ 12.4
-2 CPU
-    16 vCPU Intel(R) Xeon(R) Platinum 8352V CPU @ 2.10GHz

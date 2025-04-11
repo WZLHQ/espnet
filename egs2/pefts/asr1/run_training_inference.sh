@@ -7,25 +7,14 @@ set -o pipefail
 
 
 #----------------------------run logs-------------------------------#
-# ./run_training_inference_for_SSL_models.sh Librilight10 FT hubert base A1 11 13 4 0
-# ./run_training_inference_for_SSL_models.sh CDSD-partA FT hubert base A1 11 13 6 1
-# ./run_training_inference_for_SSL_models.sh CDSD-partA FT hubert base "A2 A3" 11 13 6 0
-# ./run_training_inference_for_SSL_models.sh Librilight10 FT hubert base "A2 A3" 11 13 4 0
-# ./run_training_inference_for_SSL_models.sh CDSD-partB FT hubert base "A1 A2 A3" 10 13 6 1
-# ./run_training_inference_for_SSL_models.sh "CDSD-partA CDSD-partB" FT hubert base A1-1 11 13 2 1
-# ./run_training_inference_for_SSL_models.sh "Librilight10" FT hubert base A1-1 11 13 4 0
-# ./run_training_inference_for_SSL_models.sh "Librilight10" LoRA hubert base A1 11 13 6 0
-# sleep 21600; ./run_training_inference_for_SSL_models.sh "CDSD-partA" LoRA hubert base A1 10 13 4 0
-# sleep 18000; ./run_training_inference_for_SSL_models.sh "CDSD-partB" LoRA hubert base A1 10 13 4 1
+
 
 #----------------------------TODO-------------------------------#
-# ./run_training_inference_for_SSL_models.sh "CDSD-partA CDSD-partB" LoraAdapterH hubert base A1 11 13 4 0 "--adapter_conf bottleneck=64"
-# ./run_training_inference_for_SSL_models.sh "Librilight10" LoraAdapterH hubert base A1 11 13 4 1 "--adapter_conf bottleneck=64"
+
 
 #----------------------------training---------------------------#
-# ./run_training_inference_for_SSL_models.sh "CDSD-partA CDSD-partB Librilight10" LoRA hubert base "A0" 10 13 4 0 "--adapter_conf rank=8 --adapter_conf alpha=8"
-# ./run_training_inference_for_SSL_models.sh "CDSD-partA CDSD-partB Librilight10" LoRA hubert base "A0-1" 10 13 4 1 "--adapter_conf rank=16 --adapter_conf alpha=16"
-# ./run_training_inference_for_SSL_models.sh "CDSD-partA CDSD-partB Librilight10" LoRA hubert base "A2" 10 13 4 1 "--adapter_conf rank=64 --adapter_conf alpha=64"
+# ./run_training_inference.sh "Librilight10" LoRA hubert base "A0" 10 13 4 0 "--adapter_conf rank=8 --adapter_conf alpha=8"
+
 
 
 # select from [CDSD-partA, CDSD-partB, Librilight10, Librispeech100] or any combination of them
@@ -63,11 +52,11 @@ export CUDA_VISIBLE_DEVICES=$9
 asr_args=${10}
 
 # output dir that contains all experiments
-explink=/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_new
+explink=/root/autodl-tmp/espnet_outputs
 # 检查软连接是否存在
-if [ ! -d "espnet_outputs_new" ]; then
+if [ ! -d "espnet_outputs" ]; then
   # 如果文件夹不存在，则创建文件夹
-  ln -s $explink espnet_outputs_new
+  ln -s $explink espnet_outputs
   echo "软连接$explink 已创建."
 fi
 
