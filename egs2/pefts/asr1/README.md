@@ -54,7 +54,9 @@ make
 4. Install fairseq
 ```bash
 cd <espnet-root>/tools
-./activate_python.sh && ./installers/install_fairseq.sh
+. /root/espnet/tools/miniconda/etc/profile.d/conda.sh && conda deactivate && conda activate espnet
+pip install pip==24.0
+./installers/install_fairseq.sh
 ```
 5. Replace loralib
 - First, we should install lora by:
@@ -81,6 +83,7 @@ We create a "PEFTs" branch from the master branch. And in "PEFTs" branch, we cre
 cd <espnet-root>/egs2/pefts/asr1
 ln -s your/data/dir data
 ln -s your/dump/dir dump
+explink=your/espnet/output/dir
 ln -s <espnet-root>/espnet pefts-espnet
 ln -s <espnet-root>/espnet2 pefts-espnet2
 ln -s <espnet-root>/tools/fairseq pefts-fairseq
