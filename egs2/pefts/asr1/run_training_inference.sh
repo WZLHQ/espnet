@@ -14,8 +14,12 @@ set -o pipefail
 
 #----------------------------training---------------------------#
 # ./run_training_inference.sh "Librilight10" LoRA hubert base "A0" 10 13 4 0 "--adapter_conf rank=8 --adapter_conf alpha=8"
+# ./run_training_inference.sh "Librilight10" FT hubert base "A0" 11 13 4 0 ""
 
-
+# ./run_training_inference.sh "CDSD-partA" LoraAdapterH hubert base "A1" 11 13 4 0 "--adapter_conf bottleneck=36"
+# ./run_training_inference.sh "CDSD-partA" LoraAdapterH hubert base "A2" 11 13 4 0 "--adapter_conf bottleneck=72"
+# ./run_training_inference.sh "CDSD-partA" LoraAdapterH hubert base "A3" 11 13 4 0 "--adapter_conf bottleneck=144"
+# ./run_training_inference.sh "CDSD-partA" LoraAdapterH hubert base "A4" 11 13 4 0 "--adapter_conf bottleneck=288"
 
 # select from [CDSD-partA, CDSD-partB, Librilight10, Librispeech100] or any combination of them
 subcorpus=$1
@@ -52,7 +56,7 @@ export CUDA_VISIBLE_DEVICES=$9
 asr_args=${10}
 
 # output dir that contains all experiments
-explink=/root/autodl-tmp/espnet_outputs
+explink=/root/autodl-fs/espnet_outpu_new
 # 检查软连接是否存在
 if [ ! -d "espnet_outputs" ]; then
   # 如果文件夹不存在，则创建文件夹
@@ -137,7 +141,7 @@ do
     asr_tag=${method}_${model}-${model_size}_${sub}-${k}
 
     ./asr.sh \
-        --nj 32 \
+        --nj 4 \
         --inference_nj ${inference_nj} \
         --gpu_inference true \
         --ngpu 1 \

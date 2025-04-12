@@ -19,7 +19,7 @@
 - gcc 4.9+ for PyTorch1.10.2+
 - We use conda enviroment by default, otherwise you can refer to https://espnet.github.io/espnet/installation.html
 - We do not install kaldi
-- If there are any installation issues, please take a look at ./visit Z_BUG_log.txt for possible solutions
+- If there are any installation issues, please take a look at ./Z_IssuesList.md for possible solutions
 
 #### 2.2 Installation ESPnet-pefts
 1. Git clone ESPnet-pefts
@@ -83,7 +83,7 @@ We create a "PEFTs" branch from the master branch. And in "PEFTs" branch, we cre
 cd <espnet-root>/egs2/pefts/asr1
 ln -s your/data/dir data
 ln -s your/dump/dir dump
-explink=your/espnet/output/dir
+explink=your/espnet/output/dir # in ./run_training_inference.sh
 ln -s <espnet-root>/espnet pefts-espnet
 ln -s <espnet-root>/espnet2 pefts-espnet2
 ln -s <espnet-root>/tools/fairseq pefts-fairseq
