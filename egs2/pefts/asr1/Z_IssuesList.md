@@ -63,6 +63,13 @@ conda-libmamba-solver (libarchive.so.20: cannot open shared object file: No such
 CondaValueError: You have chosen a non-default solver backend (libmamba) but it was not recognized. Choose one of: classic
 ```
 
-```bash
-conda update --all  --solver=classic
+```yaml
+# 1. overwrite the root/.condarc with following contents:
+channels:
+  - https://software.repos.intel.com/python/conda/
+  - conda-forge
+  - defaults
+show_channel_urls: true
+# 2. delete the conda enviroment "espnet"
+# 3. re-install espnet-pefts
 ```

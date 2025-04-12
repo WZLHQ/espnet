@@ -34,8 +34,17 @@ cd <espnet-root>/tools
 # This script tries to create a new miniconda if the output directory doesn't exist.
 # We use python=3.8 for our experiments.
 ```
-3. Make
+3. Overwrite conda channels and then Make
+```yaml
+# 3.1 overwrite the root/.condarc with following contents:
+channels:
+  - https://software.repos.intel.com/python/conda/
+  - conda-forge
+  - defaults
+show_channel_urls: true
+```
 ``` bash
+# 3.2 Make
 cd <espnet-root>/tools
 make
 # The Makefile tries to install ESPnet and all dependencies, including PyTorch.
@@ -47,8 +56,6 @@ make
 cd <espnet-root>/tools
 ./activate_python.sh && ./installers/install_fairseq.sh
 ```
-- (TODO) modify ./installers/install_fairseq.sh using https://github.com/WZLHQ/fairseq.git
-
 5. Replace loralib
 - First, we should install lora by:
 ```bash
@@ -66,8 +73,8 @@ cd <espnet-root>/tools
 - (TODO) Then, we replace some files with **.
 
 ## 3 Usage on VS Code
-We create a "PEFTs" branch from the master branch. And in "pefts" branch, we create a new recipe named "pefts" in which all the experiments are conducted. So the usage is as follows:
-1. Checkout to "pefts" branch
+We create a "PEFTs" branch from the master branch. And in "PEFTs" branch, we create a new recipe named "pefts" in which all the experiments are conducted. So the usage is as follows:
+1. Checkout to "PEFTs" branch
 2. Open <espnet-root>/egs2/pefts/asr1 in VS Code
 3. Set soft links as follows:
 ```bash
