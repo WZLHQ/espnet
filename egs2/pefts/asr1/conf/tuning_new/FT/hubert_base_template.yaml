@@ -42,6 +42,8 @@ init: none
 # minibatch related
 batch_type: numel
 batch_bins: 
+valid_batch_type: numel
+valid_batch_bins: # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
 
 # optimization
 accum_grad: 1
