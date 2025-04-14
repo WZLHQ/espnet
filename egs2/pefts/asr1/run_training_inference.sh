@@ -13,7 +13,8 @@ set -o pipefail
 
 
 #----------------------------training---------------------------#
-# ./run_training_inference.sh "CDSD-partA" LoraAdapterH hubert base "A1" 11 13 4 0 "--batch_bins 20000000 --adapter_conf bottleneck=36" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_new
+# ./run_training_inference.sh "CDSD-partA CDSD-partB Librilight10" LoraAdapterH hubert base "A3" 10 13 4 1 "--batch_bins 15000000 --adapter_conf bottleneck=144" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_new
+# ./run_training_inference.sh "CDSD-partA CDSD-partB Librilight10" LoraAdapterH hubert base "A4" 10 13 4 0 "--batch_bins 15000000 --adapter_conf bottleneck=288" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_new
 
 
 # select from [CDSD-partA, CDSD-partB, Librilight10, Librispeech100] or any combination of them
