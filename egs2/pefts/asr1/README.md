@@ -83,7 +83,6 @@ We create a "PEFTs" branch from the master branch. And in "PEFTs" branch, we cre
 cd <espnet-root>/egs2/pefts/asr1
 ln -s your/data/dir data
 ln -s your/dump/dir dump
-explink=your/espnet/output/dir # in ./run_training_inference.sh
 ln -s <espnet-root>/espnet pefts-espnet
 ln -s <espnet-root>/espnet2 pefts-espnet2
 ln -s <espnet-root>/tools/fairseq pefts-fairseq
