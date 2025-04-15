@@ -82,11 +82,14 @@ In the master branch, we create a new recipe named "pefts" in which all the expe
 cd <espnet-root>/egs2/pefts/asr1
 ln -s your/data/dir data
 ln -s your/dump/dir dump
-ln -s <espnet-root>/espnet pefts-espnet
-ln -s <espnet-root>/espnet2 pefts-espnet2
-ln -s <espnet-root>/tools/fairseq pefts-fairseq
-ln -s <espnet-root>/tools/miniconda/envs/espnet/lib/python3.8/site-packages/loralib pefts-loralib
-ln -s <espnet-root>/tools/miniconda/envs/espnet/lib/python3.8/site-packages/whisper pefts-whisper
+ln -s ../../../espnet pefts-espnet
+ln -s ../../../espnet2 pefts-espnet2
+ln -s ../../../tools/fairseq pefts-fairseq
+ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/loralib pefts-loralib
+ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/whisper pefts-whisper
+# if exits
+ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/peft pefts-peft
+ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/transformers pefts-transformers
 # TODO: why the soft links should be set?
 ```
 3. Corpus preparation
