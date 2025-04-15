@@ -28,6 +28,27 @@ class Houlsby_Adapter(nn.Module):
         return self.houlsby_adapter(x)
 
 
+# Copy from lora.py
+# had to adapt it for `lora_only` to work 
+def mark_only_houlsby_adapter_as_trainable(model: nn.Module, bias: str = "none") -> None:
+    for n, p in model.named_parameters():
+        if "houlsby_adapter" not in n:
+            p.requires_grad = False
+    if bias == "none":
+        return
+    # elif bias == "all":
+    #     for n, p in model.named_parameters():
+    #         if "bias" in n:
+    #             p.requires_grad = True
+    # elif bias == "adapter_only":
+    #     for m in model.modules():
+    #         if isinstance(m, AdapterLayer) and hasattr(m, "bias") and m.bias is not None:
+    #             m.bias.requires_grad = True
+    else:
+        raise NotImplementedError
+
+
+
 if not is_s3prl_available:
     HoulsbyTransformerSentenceEncoderLayer = None
 else:

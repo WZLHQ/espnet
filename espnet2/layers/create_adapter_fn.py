@@ -12,6 +12,7 @@ from espnet2.layers.create_adapter_utils import (
 from espnet2.layers.houlsby_adapter_layer import (
     Houlsby_Adapter,
     HoulsbyTransformerSentenceEncoderLayer,
+    mark_only_houlsby_adapter_as_trainable,
 )
 
 try:
@@ -81,6 +82,7 @@ def create_houlsby_adapter(
     if not is_traget_layer_exists:
         raise ValueError(f"Target layers {target_layers} not found in the base model.")
 
+    mark_only_houlsby_adapter_as_trainable(model, 'none')
 
 @typechecked
 def create_lora_adapter(
@@ -144,11 +146,210 @@ def create_lora_adapter(
         raise ValueError(
             f"Target modules {target_modules} not found in the base model."
         )
+    
+    lora.mark_only_lora_as_trainable(model, bias_type)
 
-    # Set the model (originally in train mode) to eval mode
-    # This step can avoid merging LoRA weights again
-    # when loading pre-trained checkpoints
-    model.eval()
+    # the developers claim that "This step can avoid merging LoRA weights again when loading pre-trained checkpoints"
+    # for training stage, it works well
+    # while for inference stage, it causes a bug that the kaiming-initialized LoRA weights are merged with the pretrained weights since model.eval() brings a merge operation
+    # so model.eval() should be commented out.
+    # model.eval()
+
+@typechecked
+def create_moslora_adapter(
+    model: torch.nn.Module,
+    rank: int = 8,
+    alpha: int = 8,
+    dropout_rate: float = 0.0,
+    target_modules: List[str] = ["query"],
+    bias_type: Optional[str] = "none",
+):
+    """Create MosLoRA adapter for the base model.
+
+    See: https://arxiv.org/pdf/2406.11909
+
+    The args are same as LoRA
+
+    Args:
+        model (torch.nn.Module): Base model to be adapted.
+        rank (int): Rank of LoRA matrices. Defaults to 8.
+        alpha (int): Constant number for LoRA scaling. Defaults to 8.
+        dropout_rate (float): Dropout probability for LoRA layers. Defaults to 0.0.
+        target_modules (List[str]): List of module(s) to apply LoRA adaptation.
+            e.g. ["query", "key", "value"] for all layers,
+            while ["encoder.encoders.blocks.0.attn.key"] for a specific layer.
+        bias_type (str): Bias training type for LoRA adaptaion, can be
+            one of ["none", "all", "lora_only"].
+            "none" means not training any bias vectors;
+            "all" means training all bias vectors, include LayerNorm biases;
+            "lora_only" means only training bias vectors in LoRA adapted modules.
+    """
+
+    if not is_lora_available:
+        raise ImportError(
+            "Requiring loralib. Install loralib following: "
+            "https://github.com/microsoft/LoRA"
+        )
+
+    is_traget_module_exists = False
+    key_list = [key for key, _ in model.named_modules()]
+
+    for key in key_list:
+        if not check_target_module_exists(key, target_modules):
+            continue
+
+        # TODO(gituser) is this a good way to check the target module?
+        # check_target_module_exists needs only one of the target modules
+        # to be in the key, but what if one key exists and another doesn't?
+        # Should this case raise an error?
+        is_traget_module_exists = True
+
+        parent_module, target_name, target_module = get_submodules(model, key)
+        if not isinstance(target_module, lora.LoRALayer):
+            # this is the only difference between create_moslora_adapter and create_lora_adapter
+            new_module = create_new_moslora_module(
+                target_module, rank, alpha, dropout_rate
+            )
+            replace_module(parent_module, target_name, target_module, new_module)
+        else:
+            continue
+
+    if not is_traget_module_exists:
+        raise ValueError(
+            f"Target modules {target_modules} not found in the base model."
+        )
+    
+    lora.mark_only_lora_as_trainable(model, bias_type)
+
+@typechecked
+def create_melora_adapter(
+    model: torch.nn.Module,
+    rank: list = [2, 4, 6, 8],
+    alpha: list = [2, 4, 6, 8],
+    dropout_rate: float = 0.0,
+    target_modules: List[str] = ["query"],
+    bias_type: Optional[str] = "none",
+):
+    """Create MELoRA adapter for the base model.
+    See: https://arxiv.org/pdf/2402.17263v2
+    """
+
+    if not is_lora_available:
+        raise ImportError(
+            "Requiring loralib. Install loralib following: "
+            "https://github.com/microsoft/LoRA"
+        )
+
+    is_traget_module_exists = False
+    key_list = [key for key, _ in model.named_modules()]
+
+    for key in key_list:
+        if not check_target_module_exists(key, target_modules):
+            continue
+
+        # TODO(gituser) is this a good way to check the target module?
+        # check_target_module_exists needs only one of the target modules
+        # to be in the key, but what if one key exists and another doesn't?
+        # Should this case raise an error?
+        is_traget_module_exists = True
+
+        parent_module, target_name, target_module = get_submodules(model, key)
+        if not isinstance(target_module, lora.LoRALayer):
+            new_module = create_new_melora_module(
+                target_module, rank, alpha, dropout_rate
+            )
+            replace_module(parent_module, target_name, target_module, new_module)
+        else:
+            continue
+
+    if not is_traget_module_exists:
+        raise ValueError(
+            f"Target modules {target_modules} not found in the base model."
+        )
+    
+    lora.mark_only_lora_as_trainable(model, bias_type)
+
+@typechecked
+def create_lora_houslby_adapter(
+    model: torch.nn.Module,
+    use_lora: bool = True,
+    rank: int = 8,
+    alpha: int = 8,
+    dropout_rate: float = 0.0,
+    # for adapter
+    bottleneck: int = 128,
+    adapterH_dropout: float = 0.0,
+    target_modules: List[str] = ["query"], # for LoRA by default
+    target_modules_for_adapterh: List[str] = ["attn.out", "mlp.2"], # for adapter by default
+    bias_type: Optional[str] = "none",
+):
+    """Create LoRA adapter for the base model.
+
+    See: https://arxiv.org/pdf/2106.09685.pdf
+
+    Args:
+        model (torch.nn.Module): Base model to be adapted.
+        rank (int): Rank of LoRA matrices. Defaults to 8.
+        alpha (int): Constant number for LoRA scaling. Defaults to 8.
+        dropout_rate (float): Dropout probability for LoRA layers. Defaults to 0.0.
+        target_modules (List[str]): List of module(s) to apply LoRA adaptation.
+            e.g. ["query", "key", "value"] for all layers,
+            while ["encoder.encoders.blocks.0.attn.key"] for a specific layer.
+        bias_type (str): Bias training type for LoRA adaptaion, can be
+            one of ["none", "all", "lora_only"].
+            "none" means not training any bias vectors;
+            "all" means training all bias vectors, include LayerNorm biases;
+            "lora_only" means only training bias vectors in LoRA adapted modules.
+
+
+    """
+
+    if not is_lora_available:
+        raise ImportError(
+            "Requiring loralib. Install loralib following: "
+            "https://github.com/microsoft/LoRA"
+        )
+
+    is_traget_module_exists = False
+    key_list = [key for key, _ in model.named_modules()]
+
+    for key in key_list:
+        if not check_target_module_exists(key, target_modules):
+            continue
+
+        # TODO(gituser) is this a good way to check the target module?
+        # check_target_module_exists needs only one of the target modules
+        # to be in the key, but what if one key exists and another doesn't?
+        # Should this case raise an error?
+        is_traget_module_exists = True
+
+        parent_module, target_name, target_module = get_submodules(model, key)
+
+        if not isinstance(target_module, lora.LoRALayer):
+
+            if any(element in key for element in target_modules_for_adapterh):
+                use_houslby=True
+                new_module = create_new_lora_houslby_module(
+                    target_module, use_lora, rank, alpha, dropout_rate, use_houslby, bottleneck, adapterH_dropout
+                )
+            else:
+                use_houslby=False
+                new_module = create_new_lora_houslby_module(
+                    target_module, use_lora, rank, alpha, dropout_rate, use_houslby, bottleneck, adapterH_dropout
+                )
+
+            replace_module(parent_module, target_name, target_module, new_module)
+        else:
+            continue
+
+    if not is_traget_module_exists:
+        raise ValueError(
+            f"Target modules {target_modules} not found in the base model."
+        )
+    
+    lora.mark_only_lora_as_trainable(model, bias_type)
+
+
 
 
 @typechecked
@@ -219,7 +420,6 @@ def create_new_houlsby_module(target_module: torch.nn.Module, bottleneck: int):
         )
     return adapter_added_layer
 
-
 @typechecked
 def create_new_lora_module(
     target_module: torch.nn.Module, rank: int, alpha: int, dropout_rate: float
@@ -242,6 +442,91 @@ def create_new_lora_module(
             r=rank,
             lora_alpha=alpha,
             lora_dropout=dropout_rate,
+        )
+    else:
+        raise ValueError(
+            f"Target module {target_module} is not supported. "
+            f"Currently, only `torch.nn.Embedding`, `torch.nn.Conv2d` "
+            f"`torch.nn.Linear` and are supported."
+        )
+
+    return new_module
+
+@typechecked
+def create_new_moslora_module(
+    target_module: torch.nn.Module, rank: int, alpha: int, dropout_rate: float
+):
+    """Create a new lora module for the given target module."""
+    bias = hasattr(target_module, "bias") and target_module.bias is not None
+
+    if isinstance(target_module, torch.nn.Embedding):
+        NotImplementedError
+    elif isinstance(target_module, torch.nn.Linear):
+        new_module = lora.LinearForMosLoRA(
+            target_module.in_features,
+            target_module.out_features,
+            bias=bias,
+            r=rank,
+            lora_alpha=alpha,
+            lora_dropout=dropout_rate,
+        )
+    else:
+        raise ValueError(
+            f"Target module {target_module} is not supported. "
+            f"Currently, only `torch.nn.Embedding`, `torch.nn.Conv2d` "
+            f"`torch.nn.Linear` and are supported."
+        )
+
+    return new_module
+
+@typechecked
+def create_new_melora_module(
+    target_module: torch.nn.Module, rank: list, alpha: list, dropout_rate: float
+):
+    """Create a new lora module for the given target module."""
+    bias = hasattr(target_module, "bias") and target_module.bias is not None
+
+    if isinstance(target_module, torch.nn.Embedding):
+        NotImplementedError
+    elif isinstance(target_module, torch.nn.Linear):
+        new_module = lora.LinearForMeLoRA(
+            target_module.in_features,
+            target_module.out_features,
+            bias=bias,
+            r=rank,
+            lora_alpha=alpha,
+            lora_dropout=dropout_rate,
+        )
+    else:
+        raise ValueError(
+            f"Target module {target_module} is not supported. "
+            f"Currently, only `torch.nn.Embedding`, `torch.nn.Conv2d` "
+            f"`torch.nn.Linear` and are supported."
+        )
+
+    return new_module
+
+@typechecked
+def create_new_lora_houslby_module(
+    target_module: torch.nn.Module, use_lora: bool, rank: int, alpha: int, dropout_rate: float, use_houslby: bool, bottleneck: int, adapterH_dropout: float,
+):
+    """Create a new lora module for the given target module."""
+    bias = hasattr(target_module, "bias") and target_module.bias is not None
+
+    if isinstance(target_module, torch.nn.Embedding):
+        NotImplementedError
+    elif isinstance(target_module, torch.nn.Linear):
+        new_module = lora.LinearForLoRACombineAdapterH(
+            target_module.in_features,
+            target_module.out_features,
+            bias=bias,
+            use_lora=use_lora,
+            r=rank,
+            lora_alpha=alpha,
+            lora_dropout=dropout_rate,
+            use_houslby=use_houslby,
+            bottleneck=bottleneck,
+            adapterH_dropout=adapterH_dropout
         )
     else:
         raise ValueError(

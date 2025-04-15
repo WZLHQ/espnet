@@ -434,6 +434,17 @@ class FairseqHubertEncoder(AbsEncoder):
     def output_size(self) -> int:
         return self._output_size
 
+    def easy_make_pad_mask(self,lengths):
+        # 获取批次大小和最大长度
+        device = lengths.device  # 获取 lengths 所在的设备
+        batch_size = lengths.size(0)
+        max_len = lengths.max().item()
+        # 生成一个范围矩阵 (batch_size, max_len)
+        range_matrix = torch.arange(0, max_len, device=device).expand(batch_size, max_len)
+        # 通过比较生成掩码，范围矩阵大于长度时为1，否则为0
+        mask = range_matrix >= lengths.unsqueeze(1)
+        return mask
+
     def forward(
         self,
         xs_pad: torch.Tensor,
@@ -449,7 +460,8 @@ class FairseqHubertEncoder(AbsEncoder):
         Returns:
             position embedded tensor and mask
         """
-        masks = make_pad_mask(ilens).to(xs_pad.device)
+        # masks = make_pad_mask(ilens).to(xs_pad.device)
+        masks=self.easy_make_pad_mask(ilens)
 
         ft = self.freeze_finetune_updates <= self.num_updates
 

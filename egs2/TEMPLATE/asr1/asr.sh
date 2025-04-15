@@ -165,6 +165,10 @@ asr_speech_fold_length=800 # fold_length for speech data during ASR training.
 asr_text_fold_length=150   # fold_length for text data during ASR training.
 lm_fold_length=150         # fold_length for LM training.
 
+# added by QH
+whisper_language=
+local_data_dir= # to specify the local_*/data.sh for specific corpora
+
 help_message=$(cat << EOF
 Usage: $0 --train-set "<train_set_name>" --valid-set "<valid_set_name>" --test_sets "<test_set_names>"
 
@@ -572,7 +576,7 @@ log "Skipped stages: ${skip_stages}"
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ] && ! [[ " ${skip_stages} " =~ [[:space:]]1[[:space:]] ]]; then
     log "Stage 1: Data preparation for data/${train_set}, data/${valid_set}, etc."
     # [Task dependent] Need to create data.sh for new corpus
-    local/data.sh ${local_data_opts}
+    ${local_data_dir}/data.sh ${local_data_opts}
 fi
 
 
@@ -863,7 +867,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ] && ! [[ " ${skip_stages} " =~ [
 
     if [ -n "${post_process_local_data_opts}" ]; then
         # Do any additional local data post-processing here
-        local/data.sh ${post_process_local_data_opts} --asr_data_dir "${data_feats}/${train_set}"
+        ${local_data_dir}/data.sh ${post_process_local_data_opts} --asr_data_dir "${data_feats}/${train_set}"
     fi
 
     # shellcheck disable=SC2002,SC2068,SC2005
@@ -961,7 +965,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ] && ! [[ " ${skip_stages} " =~ [
         ${python} -m espnet2.bin.whisper_export_vocabulary  \
             --whisper_model "${token_type}" \
             --add_token_file_name "${nlsyms_txt}" \
-            --whisper_language "${lang}" \
+            --whisper_language "${whisper_language}" \
             --whisper_task "transcribe" \
             --sot_asr "${sot_asr}" \
             --output "${token_list}"
@@ -1606,7 +1610,8 @@ if [ ${stage} -le 12 ] && [ ${stop_stage} -ge 12 ] && ! [[ " ${skip_stages} " =~
         log "Decoding started... log: '${_logdir}/asr_inference.*.log'"
         rm -f "${_logdir}/*.log"
         # shellcheck disable=SC2046,SC2086
-        ${_cmd} --gpu "${_ngpu}" JOB=1:"${_nj}" "${_logdir}"/asr_inference.JOB.log \
+        # --max-jobs-run "${_nj}" is added by QH to make sure that there are _nj JOBs in the same time
+        ${_cmd} --gpu "${_ngpu}" --max-jobs-run "${_nj}" JOB=1:"${_nj}" "${_logdir}"/asr_inference.JOB.log \
             ${python} -m espnet2.bin.${asr_task}_inference${inference_bin_tag} \
                 --batch_size ${batch_size} \
                 --ngpu "${_ngpu}" \
@@ -1746,7 +1751,7 @@ if [ ${stage} -le 13 ] && [ ${stop_stage} -ge 13 ] && ! [[ " ${skip_stages} " =~
         done
     done
 
-    [ -f local/score.sh ] && local/score.sh ${local_score_opts} "${asr_exp}"
+    [ -f ${local_data_dir}/score.sh ] && ${local_data_dir}/score.sh ${local_score_opts} "${asr_exp}"
 
     # Show results in Markdown syntax
     scripts/utils/show_asr_result.sh "${asr_exp}" > "${asr_exp}"/RESULTS.md
