@@ -65,14 +65,13 @@ cd <espnet-root>/tools
 ./activate_python.sh
 ./installers/install_lora.sh
 ```
-6. Replace whisper
-- First, we should install whisper by:
+6. Install whisper
 ```bash
 cd <espnet-root>/tools
-./activate_python.sh && ./installers/install_whisper.sh
+./activate_python.sh
+./installers/install_whisper.sh
+# NOTE: after installation, we should chechout to tag "v20230308"
 ```
-- (TODO) Then, we replace some files with **.
-
 ## 3 Usage on VS Code
 In the master branch, we create a new recipe named "pefts" in which all the experiments are conducted. So the usage is as follows:
 1. Open <espnet-root>/egs2/pefts/asr1 in VS Code
@@ -85,7 +84,7 @@ ln -s ../../../espnet pefts-espnet
 ln -s ../../../espnet2 pefts-espnet2
 ln -s ../../../tools/fairseq pefts-fairseq
 ln -s ../../../tools/LoRA pefts-loralib
-ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/whisper pefts-whisper
+ln -s ../../../tools/whisper pefts-whisper
 # if exits
 ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/peft pefts-peft
 ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/transformers pefts-transformers

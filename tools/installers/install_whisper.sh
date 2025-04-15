@@ -47,7 +47,11 @@ echo "cuda_version=${cuda_version}"
 # hash of tested commit: 9e653bd0ea0f1e9493cb4939733e9de249493cfb
 
 if "${torch_17_plus}" && "${python_38_plus}"; then
-    python -m pip install openai-whisper==20230308
+    # python -m pip install openai-whisper==20230308
+    rm -rf whisper
+    git clone https://github.com/WZLHQ/whisper.git
+    python3 -m pip install --editable ./whisper
+    python3 -m pip install filelock
 else
     echo "[ERROR] whisper does not work with pytorch<1.7.0, python<3.8"
 fi
