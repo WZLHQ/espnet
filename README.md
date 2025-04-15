@@ -54,18 +54,17 @@ make
 4. Install fairseq
 ```bash
 cd <espnet-root>/tools
-. /root/espnet/tools/miniconda/etc/profile.d/conda.sh && conda deactivate && conda activate espnet
+./activate_python.sh
 pip install pip==24.0
 ./installers/install_fairseq.sh
+pip install --upgrade pip
 ```
-5. Replace loralib
-- First, we should install lora by:
+5. Install loralib
 ```bash
 cd <espnet-root>/tools
-./activate_python.sh && ./installers/install_lora.sh
+./activate_python.sh
+./installers/install_lora.sh
 ```
-- (TODO) Then, we replace some files with **.
-
 6. Replace whisper
 - First, we should install whisper by:
 ```bash
@@ -85,7 +84,7 @@ ln -s your/dump/dir dump
 ln -s ../../../espnet pefts-espnet
 ln -s ../../../espnet2 pefts-espnet2
 ln -s ../../../tools/fairseq pefts-fairseq
-ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/loralib pefts-loralib
+ln -s ../../../tools/LoRA pefts-loralib
 ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/whisper pefts-whisper
 # if exits
 ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/peft pefts-peft

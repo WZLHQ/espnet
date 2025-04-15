@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-MAKE=make
 
 if [ $# != 0 ]; then
     echo "Usage: $0"
@@ -45,7 +44,10 @@ EOF
 echo "cuda_version=${cuda_version}"
 
 if "${torch_17_plus}" && "${python_38_plus}"; then
-    python -m pip install loralib
+    rm -rf LoRA
+    git clone https://github.com/WZLHQ/LoRA.git
+    python3 -m pip install --editable ./LoRA
+    python3 -m pip install filelock
 else
     echo "[ERROR] lora does not work with pytorch<1.7.0, python<3.8"
 fi
