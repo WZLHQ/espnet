@@ -75,10 +75,9 @@ cd <espnet-root>/tools
 - (TODO) Then, we replace some files with **.
 
 ## 3 Usage on VS Code
-We create a "PEFTs" branch from the master branch. And in "PEFTs" branch, we create a new recipe named "pefts" in which all the experiments are conducted. So the usage is as follows:
-1. Checkout to "PEFTs" branch
-2. Open <espnet-root>/egs2/pefts/asr1 in VS Code
-3. Set soft links as follows:
+In the master branch, we create a new recipe named "pefts" in which all the experiments are conducted. So the usage is as follows:
+1. Open <espnet-root>/egs2/pefts/asr1 in VS Code
+2. Set soft links as follows:
 ```bash
 cd <espnet-root>/egs2/pefts/asr1
 ln -s your/data/dir data
@@ -90,16 +89,16 @@ ln -s <espnet-root>/tools/miniconda/envs/espnet/lib/python3.8/site-packages/lora
 ln -s <espnet-root>/tools/miniconda/envs/espnet/lib/python3.8/site-packages/whisper pefts-whisper
 # TODO: why the soft links should be set?
 ```
-4. Corpus preparation
+3. Corpus preparation
 ```bash
 # There might be several path args that should be replaced with your own path.
 # Therefor, it would be better that you have already been familiar with 1) what the first stage of ESPnet do; 2) what the ${local_data_dir}/data.sh do.
 ./run_data_prepare.sh
 ```
-5. Training and inference
+4. Training and inference
 ```bash
 # run_training_inference.sh allows you specify the corpus, PEFT method, model and its size, key (a unique tag for current experiments) and so on.
 # It might be a lit bit hard to understand, so you are suggested to figure out the whole pipline through an example below. 
 # After you truely understand how it works, you can do the any combination among corpus, model, and method.
-./run_training_inference.sh "Librilight10" LoRA hubert base "A0" 10 13 4 0 "--adapter_conf rank=8 --adapter_conf alpha=8"
+./run_training_inference.sh "Librilight10" LoRA hubert base "A0" 10 13 4 0 "--adapter_conf rank=8 --adapter_conf alpha=8" /*/espnet_outputs
 ```
