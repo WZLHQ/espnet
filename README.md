@@ -70,7 +70,7 @@ cd <espnet-root>/tools
 cd <espnet-root>/tools
 ./activate_python.sh
 ./installers/install_whisper.sh
-# NOTE: after installation, we should chechout to tag "v20230308"
+# NOTE: after installation, we should chechout to branch "whisper-espnet-pefts" which is create from the tag v20230308
 ```
 ## 3 Usage on VS Code
 In the master branch, we create a new recipe named "pefts" in which all the experiments are conducted. So the usage is as follows:
