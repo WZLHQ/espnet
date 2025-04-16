@@ -130,3 +130,5 @@ egs2/pefts/asr1/pefts-peft
 egs2/pefts/asr1/pefts-transformers
 egs2/pefts/asr1/pefts-whisper
 egs2/pefts/asr1/pefts-fairseq
+tools/whisper
+tools/LoRA
