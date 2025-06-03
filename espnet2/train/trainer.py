@@ -420,6 +420,10 @@ class Trainer:
                         for n, p in model.named_parameters():
                             if not p.requires_grad:
                                 model_state_dict.pop(n)
+                else:
+                    for n, p in model.named_parameters():
+                        if not p.requires_grad:
+                            model_state_dict.pop(n)
 
                 torch.save(
                     {
