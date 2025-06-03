@@ -70,6 +70,7 @@ class ESPnetASRModel(AbsESPnetModel):
         sym_eos: str = "<sos/eos>",
         extract_feats_in_collect_stats: bool = True,
         lang_token_id: int = -1,
+        model_twins=False
     ):
         assert 0.0 <= ctc_weight <= 1.0, ctc_weight
         assert 0.0 <= interctc_weight < 1.0, interctc_weight
@@ -77,6 +78,9 @@ class ESPnetASRModel(AbsESPnetModel):
         super().__init__()
         # NOTE (Shih-Lun): else case is for OpenAI Whisper ASR model,
         #                  which doesn't use <blank> token
+
+        self.model_twins=model_twins
+
         if sym_blank in token_list:
             self.blank_id = token_list.index(sym_blank)
         else:
@@ -190,6 +194,9 @@ class ESPnetASRModel(AbsESPnetModel):
                     token_list, sym_space, sym_blank, report_cer, report_wer
                 )
 
+        if self.model_twins:
+            self.kl_loss=torch.nn.KLDivLoss(reduction="batchmean")
+
         if ctc_weight == 0.0:
             self.ctc = None
         else:
@@ -208,6 +215,41 @@ class ESPnetASRModel(AbsESPnetModel):
             self.lang_token_id = torch.tensor([[lang_token_id]])
         else:
             self.lang_token_id = None
+
+        if self.encoder.use_adapterH:
+            self.enable_adapter_training()
+
+    def enable_adapter_training(self):
+        
+        for p in self.parameters():
+            p.requires_grad = False
+
+        for block in self.encoder.encoders.blocks:
+            for p in block.adapterH_self_attn.parameters():
+                p.requires_grad=True
+            for p in block.adapterH_mlp.parameters():
+                p.requires_grad=True
+
+        for block in self.decoder.decoders.blocks:
+            for p in block.adapterH_self_attn.parameters():
+                p.requires_grad=True
+            for p in block.adapterH_cross_attn.parameters():
+                p.requires_grad=True
+            for p in block.adapterH_mlp.parameters():
+                p.requires_grad=True
+        
+        self.encoder.encoders.ln_post.requires_grad=True
+
+        for block in self.encoder.encoders.blocks:
+            block.mlp_ln.requires_grad=True
+            block.attn_ln.requires_grad=True
+
+        self.decoder.decoders.ln.requires_grad=True
+
+        for block in self.decoder.decoders.blocks:
+            block.mlp_ln.requires_grad=True
+            block.attn_ln.requires_grad=True
+            block.cross_attn_ln.requires_grad=True
 
     def forward(
         self,
@@ -241,8 +283,12 @@ class ESPnetASRModel(AbsESPnetModel):
         # for data-parallel
         text = text[:, : text_lengths.max()]
 
+        normal_speech=kwargs.get("normal_speech", None)
+        normal_speech_lengths=kwargs.get("normal_speech_lengths", None)
+
         # 1. Encoder
-        encoder_out, encoder_out_lens = self.encode(speech, speech_lengths)
+        encoder_out, encoder_out_lens, normal_encoder_out, normal_encoder_out_lens = self.encode(speech, speech_lengths, normal_speech, normal_speech_lengths)
+
         intermediate_outs = None
         if isinstance(encoder_out, tuple):
             intermediate_outs = encoder_out[1]
@@ -343,7 +389,7 @@ class ESPnetASRModel(AbsESPnetModel):
             # 2c. Attention decoder branch
             if self.ctc_weight != 1.0:
                 loss_att, acc_att, cer_att, wer_att = self._calc_att_loss(
-                    encoder_out, encoder_out_lens, text, text_lengths
+                    encoder_out, encoder_out_lens, normal_encoder_out, normal_encoder_out_lens, text, text_lengths
                 )
 
             # 3. CTC-Att loss definition
@@ -379,7 +425,7 @@ class ESPnetASRModel(AbsESPnetModel):
         return {"feats": feats, "feats_lengths": feats_lengths}
 
     def encode(
-        self, speech: torch.Tensor, speech_lengths: torch.Tensor
+        self, speech: torch.Tensor, speech_lengths: torch.Tensor, normal_speech=None, normal_speech_lengths=None
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Frontend + Encoder. Note that this method is used by asr_inference.py
 
@@ -390,18 +436,28 @@ class ESPnetASRModel(AbsESPnetModel):
         with autocast(False):
             # 1. Extract feats
             feats, feats_lengths = self._extract_feats(speech, speech_lengths)
+            if normal_speech is not None:
+                normal_feats, normal_feats_lengths = self._extract_feats(normal_speech, normal_speech_lengths)
+            else:
+                normal_feats, normal_feats_lengths = None, None
 
             # 2. Data augmentation
             if self.specaug is not None and self.training:
                 feats, feats_lengths = self.specaug(feats, feats_lengths)
+                if normal_speech is not None:
+                    normal_feats, normal_feats_lengths = self.specaug(normal_feats, normal_feats_lengths)
 
             # 3. Normalization for feature: e.g. Global-CMVN, Utterance-CMVN
             if self.normalize is not None:
                 feats, feats_lengths = self.normalize(feats, feats_lengths)
+                if normal_speech is not None:
+                    normal_feats, normal_feats_lengths = self.normalize(normal_feats, normal_feats_lengths)
 
         # Pre-encoder, e.g. used for raw input data
         if self.preencoder is not None:
             feats, feats_lengths = self.preencoder(feats, feats_lengths)
+            if normal_speech is not None:
+                normal_feats, normal_feats_lengths = self.preencoder(normal_feats, normal_feats_lengths)
 
         # 4. Forward encoder
         # feats: (Batch, Length, Dim)
@@ -409,39 +465,42 @@ class ESPnetASRModel(AbsESPnetModel):
         if self.encoder.interctc_use_conditioning or getattr(
             self.encoder, "ctc_trim", False
         ):
+            NotImplementedError("model twins is not implemented for interctc_use_conditioning")
             encoder_out, encoder_out_lens, _ = self.encoder(
                 feats, feats_lengths, ctc=self.ctc
             )
         else:
-            encoder_out, encoder_out_lens, _ = self.encoder(feats, feats_lengths)
-        intermediate_outs = None
-        if isinstance(encoder_out, tuple):
-            intermediate_outs = encoder_out[1]
-            encoder_out = encoder_out[0]
+            encoder_out, encoder_out_lens, normal_encoder_out, normal_encoder_out_lens, _ = self.encoder(feats, feats_lengths, normal_feats, normal_feats_lengths)
+
+        # intermediate_outs = None
+        # if isinstance(encoder_out, tuple):
+        #     intermediate_outs = encoder_out[1]
+        #     encoder_out = encoder_out[0]
 
         # Post-encoder, e.g. NLU
-        if self.postencoder is not None:
-            encoder_out, encoder_out_lens = self.postencoder(
-                encoder_out, encoder_out_lens
-            )
+        # if self.postencoder is not None:
+        #     encoder_out, encoder_out_lens = self.postencoder(
+        #         encoder_out, encoder_out_lens
+        #     )
 
-        assert encoder_out.size(0) == speech.size(0), (
-            encoder_out.size(),
-            speech.size(0),
-        )
-        if (
-            getattr(self.encoder, "selfattention_layer_type", None) != "lf_selfattn"
-            and not self.is_encoder_whisper
-        ):
-            assert encoder_out.size(-2) <= encoder_out_lens.max(), (
-                encoder_out.size(),
-                encoder_out_lens.max(),
-            )
+        # assert encoder_out.size(0) == speech.size(0), (
+        #     encoder_out.size(),
+        #     speech.size(0),
+        # )
+        
+        # if (
+        #     getattr(self.encoder, "selfattention_layer_type", None) != "lf_selfattn"
+        #     and not self.is_encoder_whisper
+        # ):
+        #     assert encoder_out.size(-2) <= encoder_out_lens.max(), (
+        #         encoder_out.size(),
+        #         encoder_out_lens.max(),
+        #     )
 
-        if intermediate_outs is not None:
-            return (encoder_out, intermediate_outs), encoder_out_lens
+        # if intermediate_outs is not None:
+        #     return (encoder_out, intermediate_outs), encoder_out_lens
 
-        return encoder_out, encoder_out_lens
+        return encoder_out, encoder_out_lens, normal_encoder_out, normal_encoder_out_lens
 
     def _extract_feats(
         self, speech: torch.Tensor, speech_lengths: torch.Tensor
@@ -547,10 +606,35 @@ class ESPnetASRModel(AbsESPnetModel):
         assert nll.size(0) == total_num
         return nll
 
+    def pull_only_contrastive_loss(self, logits_patho, logits_normal):
+        """
+        logits_patho: (B, L, F)
+        logits_normal: (B, L, F)
+        """
+        B, L, F = logits_patho.shape
+
+        # Step 1: reshape
+        z_patho = logits_patho.reshape(B*L, F)    # (B*L, F)
+        z_normal = logits_normal.reshape(B*L, F)  # (B*L, F)
+
+        # Step 2: Normalize for cosine similarity
+        z_patho = torch.nn.functional.normalize(z_patho, dim=-1)     # (B*L, F)
+        z_normal = torch.nn.functional.normalize(z_normal, dim=-1)   # (B*L, F)
+
+        # Step 3: Cosine similarity for each pair
+        cos_sim = (z_patho * z_normal).sum(dim=-1)  # (B*L,)
+
+        # Step 4: Loss = 1 - cosine_similarity
+        loss = 1.0 - cos_sim.mean()
+
+        return loss
+
     def _calc_att_loss(
         self,
         encoder_out: torch.Tensor,
         encoder_out_lens: torch.Tensor,
+        normal_encoder_out, 
+        normal_encoder_out_lens,
         ys_pad: torch.Tensor,
         ys_pad_lens: torch.Tensor,
     ):
@@ -568,26 +652,70 @@ class ESPnetASRModel(AbsESPnetModel):
         ys_in_lens = ys_pad_lens + 1
 
         # 1. Forward decoder
-        decoder_out, _ = self.decoder(
-            encoder_out, encoder_out_lens, ys_in_pad, ys_in_lens
+        decoder_out, normal_decoder_out, _ = self.decoder(
+            encoder_out, encoder_out_lens, normal_encoder_out, normal_encoder_out_lens, ys_in_pad, ys_in_lens
         )
 
-        # 2. Compute attention loss
-        loss_att = self.criterion_att(decoder_out, ys_out_pad)
-        acc_att = th_accuracy(
-            decoder_out.view(-1, self.vocab_size),
-            ys_out_pad,
-            ignore_label=self.ignore_id,
-        )
+        if self.model_twins:
+            decoder_out_student=decoder_out
+            decoder_out_teacher=normal_decoder_out
 
-        # Compute cer/wer using attention-decoder
-        if self.training or self.error_calculator is None:
-            cer_att, wer_att = None, None
+            # compute contrastive loss
+            # cons_loss=self.pull_only_contrastive_loss(decoder_out_student,decoder_out_teacher.detach())
+
+            # compute distillation loss
+            kl_loss=self.kl_loss(
+                torch.log_softmax(decoder_out_student, dim=-1), 
+                torch.softmax(decoder_out_teacher.detach(), dim=-1),
+                )
+
+            loss_att,acc_att=[],[]
+            cer_att, wer_att=[],[]
+            for decoder_out in [decoder_out_student, decoder_out_teacher]:
+
+                # 2. Compute attention loss for teacher
+                loss_att_ = self.criterion_att(decoder_out, ys_out_pad)
+                acc_att_ = th_accuracy(
+                    decoder_out.view(-1, self.vocab_size),
+                    ys_out_pad,
+                    ignore_label=self.ignore_id,
+                )
+                acc_att.append(acc_att_)
+                loss_att.append(loss_att_)
+                # Compute cer/wer using attention-decoder
+                if self.training or self.error_calculator is None:
+                    cer_att, wer_att = None, None
+                else:
+                    ys_hat = decoder_out.argmax(dim=-1)
+                    cer_att_, wer_att_ = self.error_calculator(ys_hat.cpu(), ys_pad.cpu())
+                    cer_att.append(cer_att_)
+                    wer_att.append(wer_att_)
+
+            return loss_att[0]+loss_att[1], acc_att[0], cer_att if cer_att is None else sum(cer_att)/2, wer_att if wer_att is None else sum(wer_att)/2
+        
+            # return loss_att[0]+loss_att[1]+kl_loss, acc_att[0], cer_att if cer_att is None else sum(cer_att)/2, wer_att if wer_att is None else sum(wer_att)/2
+            
+            # return loss_att[0]+loss_att[1]+kl_loss+cons_loss, acc_att[0], cer_att if cer_att is None else sum(cer_att)/2, wer_att if wer_att is None else sum(wer_att)/2
+
+            # return loss_att[0], acc_att[0], cer_att if cer_att is None else cer_att[0], wer_att if wer_att is None else wer_att[0]
+
         else:
-            ys_hat = decoder_out.argmax(dim=-1)
-            cer_att, wer_att = self.error_calculator(ys_hat.cpu(), ys_pad.cpu())
+            # 2. Compute attention loss
+            loss_att = self.criterion_att(decoder_out, ys_out_pad)
+            acc_att = th_accuracy(
+                decoder_out.view(-1, self.vocab_size),
+                ys_out_pad,
+                ignore_label=self.ignore_id,
+            )
 
-        return loss_att, acc_att, cer_att, wer_att
+            # Compute cer/wer using attention-decoder
+            if self.training or self.error_calculator is None:
+                cer_att, wer_att = None, None
+            else:
+                ys_hat = decoder_out.argmax(dim=-1)
+                cer_att, wer_att = self.error_calculator(ys_hat.cpu(), ys_pad.cpu())
+
+            return loss_att, acc_att, cer_att, wer_att
 
     def _calc_ctc_loss(
         self,

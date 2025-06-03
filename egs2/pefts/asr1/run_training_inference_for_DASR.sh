@@ -13,13 +13,28 @@ set -o pipefail
 
 
 #----------------------------training---------------------------#
-# ./run_training_inference.sh "CDSD-partA-spk01" LoRA whisper small "A1" 10 13 4 0 "--batch_size 44 --valid_batch_size 36" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_new
-# ./run_training_inference.sh "CDSD-normal-partA-spk01" LoRA whisper small "A1" 10 13 4 0 "--batch_size 44 --valid_batch_size 36" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_new
+
+# ./run_training_inference.sh "CDSD-partB" LoRA whisper small "A1" 11 13 4 0 "--batch_size 64 --valid_batch_size 48 --adapter_conf rank=8 --adapter_conf alpha=8" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" LoRA whisper small "A2" 11 13 4 0 "--batch_size 64 --valid_batch_size 48 --adapter_conf rank=16 --adapter_conf alpha=16" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" LoRA whisper small "A3" 11 13 4 0 "--batch_size 64 --valid_batch_size 48 --adapter_conf rank=32 --adapter_conf alpha=32" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" LoRA whisper small "A4" 11 13 4 0 "--batch_size 64 --valid_batch_size 48 --adapter_conf rank=64 --adapter_conf alpha=64" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" LoRA whisper small "A5" 11 13 4 0 "--batch_size 64 --valid_batch_size 48 --adapter_conf rank=128 --adapter_conf alpha=128" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" LoRA whisper small "A6" 11 13 4 1 "--batch_size 64 --valid_batch_size 48 --adapter_conf rank=256 --adapter_conf alpha=256" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+
+# ./run_training_inference.sh "CDSD-partB" AdapterH whisper small "A1" 11 13 4 1 "--batch_size 64 --valid_batch_size 48 --encoder_conf adapter_dim=35 --decoder_conf adapter_dim=35" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" AdapterH whisper small "A2" 11 13 4 1 "--batch_size 64 --valid_batch_size 48 --encoder_conf adapter_dim=70 --decoder_conf adapter_dim=70" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" AdapterH whisper small "A3" 11 13 4 1 "--batch_size 64 --valid_batch_size 48 --encoder_conf adapter_dim=140 --decoder_conf adapter_dim=140" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" AdapterH whisper small "A4" 11 13 4 1 "--batch_size 64 --valid_batch_size 48 --encoder_conf adapter_dim=280 --decoder_conf adapter_dim=280" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" AdapterH whisper small "A5" 11 13 4 1 "--batch_size 64 --valid_batch_size 48 --encoder_conf adapter_dim=560 --decoder_conf adapter_dim=560" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" AdapterH whisper small "A6" 11 13 4 1 "--batch_size 64 --valid_batch_size 48 --encoder_conf adapter_dim=1120 --decoder_conf adapter_dim=1120 --use_adapter false" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+
+# ./run_training_inference.sh "CDSD-partB" AdapterH whisper small "LoraAdapter1" 11 13 4 1 "--batch_size 64 --valid_batch_size 48" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
+# ./run_training_inference.sh "CDSD-partB" AdapterH whisper small "LoraAdapter2" 11 13 4 0 "--batch_size 64 --valid_batch_size 48 --encoder_conf adapter_dim=1120 --decoder_conf adapter_dim=1120 --adapter_conf rank=256 --adapter_conf alpha=256" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_exp/combine_lora_and_adapter
 
 # select from [CDSD-partA, CDSD-partB, Librilight10, Librispeech100] or any combination of them
 subcorpus=$1
 
-# select a method from [FT, LoRA, MosLoRA, MeLoRA, LoraAdapterH, ...]
+# select a method from [FT, LoRA, MosLoRA, MeLoRA, AdapterH,LoraAdapterH, ...]
 # NOTE that loraAdapterH denotes LoRA combines houslby adapter; FT denotes full-model fine-tuning
 # TODO add FT, Houlsby_Adapter, MeLoRA, VeRA, LanFusion, CAM, and so on.
 method=$2

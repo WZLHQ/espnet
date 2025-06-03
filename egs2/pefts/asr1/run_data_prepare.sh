@@ -14,39 +14,39 @@ set -o pipefail
 
 #------------------Now only suport CDSD, AESRC, Librispeech100, Librilight10-------------------#
 # TODO: Add Aishell1, Kespeech, Fleurs.
-corpus=Librilight10
+corpus=CDSD
 
 # select from [whisper_multilingual, bpe, char]
-token_type=bpe
+token_type=whisper_multilingual
 
-if [[ "${corpus}" == *"CDSD"* ]]; then
+if [[ "${corpus}" == "CDSD" ]]; then
     #--------------for CDSD-----------------#
-    # $data_sets are selected from ["CDSD-partA", "CDSD-partB", "CDSD-partA CDSD-partB"]
-    # corpus_path is "/autodl-fs/data/corora"
-    local_data_dir=local/local_for_AESRC_and_CDSD
-    data_sets="CDSD-partB"
-    corpus_path=/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_datasets/CDSD
-    local_data_opts="--corpus ${corpus} --corpus_path ${corpus_path} --data_sets ${data_sets}"
+    # $data_sets are selected from ["CDSD-partA", "CDSD-partB", "CDSD-partA CDSD-partB", "CDSD-partA-spk01"]
+    #--------------for CDSD-normal-----------------#
+    # $data_sets are selected from ["CDSD-normal-partA-spk01", "CDSD-normal-partB-spk**"]
+    local_data_dir=local/local_for_CDSD
+    data_sets="CDSD-normal-partB-spk06"
+    corpus_path=/media/rosie/Samsung_T5/Data_set/speech_corpus/CDSD
+    local_data_opts="--corpus_path ${corpus_path} --data_sets ${data_sets}"
     whisper_language=zh
 
-elif [[ "${corpus}" == *"AESRC"* ]]; then
+elif [[ "${corpus}" == "AESRC" ]]; then
     #--------------for AESRC-----------------#
     # $data_sets are selected from "US UK IND CHN JPN PT RU KR CA ES"
-    # corpus_path is "/autodl-fs/data/corora"
-    local_data_dir=local/local_for_AESRC_and_CDSD
+    local_data_dir=local/local_for_AESRC
     data_sets="US UK IND CHN JPN PT RU KR CA ES"
     corpus_path=/your/corora/path
     local_data_opts="--corpus ${corpus} --corpus_path ${corpus_path} --data_sets ${data_sets}"
     whisper_language=en
 
-elif [[ "${corpus}" == *"Librispeech100"* ]]; then
+elif [[ "${corpus}" == "Librispeech100" ]]; then
     #--------------for Librispeech100-----------------#
     local_data_dir=local/local_for_librispeech100
     data_sets="Librispeech100"
     local_data_opts="--data_sets ${data_sets}"
     whisper_language=en
 
-elif [[ "${corpus}" == *"Librilight10"* ]]; then
+elif [[ "${corpus}" == "Librilight10" ]]; then
     #--------------for Librilight10-----------------#
     local_data_dir=local/local_for_librilight10
     data_sets="Librilight10"

@@ -707,7 +707,7 @@ class AbsTask(ABC):
             type=str,
             default="lora",
             help="Adapter Name",
-            choices=["lora", "houlsby", "moslora", "melora", "lora_houlsby", "vera"],
+            choices=["lora", "moslora", "melora", "vera"],
         )
         group.add_argument(
             "--save_strategy",
@@ -1413,11 +1413,12 @@ class AbsTask(ABC):
                 suf = "" if i == 1 else str(i)
                 logging.info(f"Optimizer{suf}:\n{o}")
                 logging.info(f"Scheduler{suf}: {s}")
+        
+        output_dir = Path(args.output_dir)
 
-        # 5. Dump "args" to config.yaml
+        # Dump "args" to config.yaml
         # NOTE(kamo): "args" should be saved after object-buildings are done
         #  because they are allowed to modify "args".
-        output_dir = Path(args.output_dir)
         if not distributed_option.distributed or distributed_option.dist_rank == 0:
             output_dir.mkdir(parents=True, exist_ok=True)
             with (output_dir / "config.yaml").open("w", encoding="utf-8") as f:
@@ -1499,6 +1500,11 @@ class AbsTask(ABC):
                         else "cpu"
                     ),
                 )
+
+            # modify the following args after stage 10
+            if args.model_conf.get("model_twins", False):
+                args.train_data_path_and_name_and_type+=[('dump/raw/CDSD-normal-partB-spk06_train/wav.scp', 'normal_speech', 'kaldi_ark')]
+                args.valid_data_path_and_name_and_type+=[('dump/raw/CDSD-normal-partB-spk06_valid/wav.scp', 'normal_speech', 'kaldi_ark')]
 
             # 7. Build iterator factories
             if args.multiple_iterator:
@@ -2338,6 +2344,12 @@ class AbsTask(ABC):
         with config_file.open("r", encoding="utf-8") as f:
             args = yaml.safe_load(f)
         args = argparse.Namespace(**args)
+
+        if args.model_conf.get("model_twins", False):
+            args.model_conf["model_twins"]=False
+            args.encoder_conf["model_twins"]=False
+            args.decoder_conf["model_twins"]=False
+
         model = cls.build_model(args)
         if not isinstance(model, AbsESPnetModel):
             raise RuntimeError(

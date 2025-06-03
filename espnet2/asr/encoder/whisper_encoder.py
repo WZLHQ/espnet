@@ -25,6 +25,12 @@ class OpenAIWhisperEncoder(AbsEncoder):
         use_specaug: bool = False,
         specaug_conf: Union[dict, None] = None,
         do_pad_trim: bool = False,
+        model_twins=False,
+        same_twins=False,
+        use_adapterH=False,
+        adapter_dim=35,
+        downsample_list=None,
+        bottleneck_list=None,
     ):
         try:
             import whisper
@@ -39,6 +45,9 @@ class OpenAIWhisperEncoder(AbsEncoder):
 
         super().__init__()
 
+        self.model_twins=model_twins
+        self.same_twins=same_twins
+
         self.n_fft = N_FFT
         self.win_length = N_FFT
         self.hop_length = HOP_LENGTH
@@ -51,10 +60,23 @@ class OpenAIWhisperEncoder(AbsEncoder):
 
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu"
+            whisper_model, download_root=download_dir, device="cpu", use_adapterH=use_adapterH, adapter_dim=adapter_dim, downsample_list=downsample_list, bottleneck_list=bottleneck_list
         )
+
+        self.use_adapterH=use_adapterH
+
+        # we define "self.encoders" as student encoder
         self.encoders = copy.deepcopy(_model.encoder)
         self.encoders.train()
+
+        if self.model_twins:
+            if self.same_twins:
+                self.teacher_blocks=self.encoders.blocks
+            else:
+                # student encoder and teacher encoder share the "_model.encoder.blocks"-beside modules
+                # thus, we only deepcopy the _model.encoder.blocks as teacher
+                self.teacher_blocks = copy.deepcopy(_model.encoder.blocks)
+                self.teacher_blocks.train()
 
         del _model
 
@@ -127,60 +149,155 @@ class OpenAIWhisperEncoder(AbsEncoder):
         self,
         input: torch.Tensor,
         ilens: torch.Tensor = None,
+        normal_input=None,
+        mormal_ilens=None,
     ) -> torch.Tensor:
-        x = F.gelu(self.encoders.conv1(input))
-        x = F.gelu(self.encoders.conv2(x))
-        x = x.permute(0, 2, 1)
+        
+        if self.model_twins:
 
-        n_frames = x.size(1)
-        max_pos = self.encoders.positional_embedding.size(0)
-        if n_frames <= max_pos:
-            x = (x + self.encoders.positional_embedding[: x.size(1), :]).to(x.dtype)
-        else:
-            # due to positional encoding, audios >30 sec won't be accepted
-            x = x[:, :max_pos, :] + self.encoders.positional_embedding
+            #----------start forward student----------------#
+            x = F.gelu(self.encoders.conv1(input))
+            x = F.gelu(self.encoders.conv2(x))
+            x = x.permute(0, 2, 1)
 
-        x = self.dropout(x)
+            n_frames = x.size(1)
+            max_pos = self.encoders.positional_embedding.size(0)
+            if n_frames <= max_pos:
+                x = (x + self.encoders.positional_embedding[: x.size(1), :]).to(x.dtype)
+            else:
+                # due to positional encoding, audios >30 sec won't be accepted
+                x = x[:, :max_pos, :] + self.encoders.positional_embedding
 
-        for layer, block in enumerate(self.encoders.blocks):
-            x = block(x)
-            if layer < len(self.encoders.blocks) - 1:
-                x = self.dropout(x)
+            # forward of student encoder blocks
+            x = self.dropout(x)
+            for layer, block in enumerate(self.encoders.blocks):
+                x = block(x)
+                if layer < len(self.encoders.blocks) - 1:
+                    x = self.dropout(x)
+            x_student = self.encoders.ln_post(x)
 
-        x = self.encoders.ln_post(x)
-
-        if ilens is not None:
-            olens = (
-                1
-                + (
-                    ilens
-                    - self.encoders.conv2.kernel_size[0]
-                    + 2 * self.encoders.conv2.padding[0]
+            if ilens is not None:
+                olens = (
+                    1
+                    + (
+                        ilens
+                        - self.encoders.conv2.kernel_size[0]
+                        + 2 * self.encoders.conv2.padding[0]
+                    )
+                    // self.encoders.conv2.stride[0]
                 )
-                // self.encoders.conv2.stride[0]
-            )
-            olens = torch.clamp(olens, max=max_pos)
-        else:
-            olens = None
+                olens_student = torch.clamp(olens, max=max_pos)
+            else:
+                olens_student = None
+            #----------end forward student----------------#
 
-        return x, olens
+
+
+            #----------start forward teacher----------------#
+            x = F.gelu(self.encoders.conv1(normal_input))
+            x = F.gelu(self.encoders.conv2(x))
+            x = x.permute(0, 2, 1)
+
+            n_frames = x.size(1)
+            max_pos = self.encoders.positional_embedding.size(0)
+            if n_frames <= max_pos:
+                x = (x + self.encoders.positional_embedding[: x.size(1), :]).to(x.dtype)
+            else:
+                # due to positional encoding, audios >30 sec won't be accepted
+                x = x[:, :max_pos, :] + self.encoders.positional_embedding
+
+            # forward of teacher encoder blocks
+            x = self.dropout(x)
+            for layer, block in enumerate(self.teacher_blocks):
+                x = block(x)
+                if layer < len(self.teacher_blocks) - 1:
+                    x = self.dropout(x)
+            x_teacher = self.encoders.ln_post(x)
+
+            if mormal_ilens is not None:
+                olens = (
+                    1
+                    + (
+                        mormal_ilens
+                        - self.encoders.conv2.kernel_size[0]
+                        + 2 * self.encoders.conv2.padding[0]
+                    )
+                    // self.encoders.conv2.stride[0]
+                )
+                olens_teacher = torch.clamp(olens, max=max_pos)
+            else:
+                olens_teacher = None
+            #----------end forward teacher----------------#
+
+            return x_student, olens_student, x_teacher, olens_teacher
+        
+        else:
+
+            x = F.gelu(self.encoders.conv1(input))
+            x = F.gelu(self.encoders.conv2(x))
+            x = x.permute(0, 2, 1)
+
+            n_frames = x.size(1)
+            max_pos = self.encoders.positional_embedding.size(0)
+            if n_frames <= max_pos:
+                x = (x + self.encoders.positional_embedding[: x.size(1), :]).to(x.dtype)
+            else:
+                # due to positional encoding, audios >30 sec won't be accepted
+                x = x[:, :max_pos, :] + self.encoders.positional_embedding
+
+            x = self.dropout(x)
+
+            for layer, block in enumerate(self.encoders.blocks):
+                x = block(x)
+                if layer < len(self.encoders.blocks) - 1:
+                    x = self.dropout(x)
+
+            x = self.encoders.ln_post(x)
+
+            if ilens is not None:
+                olens = (
+                    1
+                    + (
+                        ilens
+                        - self.encoders.conv2.kernel_size[0]
+                        + 2 * self.encoders.conv2.padding[0]
+                    )
+                    // self.encoders.conv2.stride[0]
+                )
+                olens = torch.clamp(olens, max=max_pos)
+            else:
+                olens = None
+
+            return x, olens, None, None
 
     def forward(
         self,
         xs_pad: torch.Tensor,
         ilens: torch.Tensor,
+        normal_xs_pad=None,
+        normal_ilens=None,
         prev_states: torch.Tensor = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
         if self.do_pad_trim:
             xs_pad = self.pad_or_trim(xs_pad, self.pad_samples)
+            if normal_xs_pad is not None:
+                normal_xs_pad = self.pad_or_trim(normal_xs_pad, self.pad_samples)
 
         feats, feats_lens = self.log_mel_spectrogram(xs_pad, ilens)
+        if normal_xs_pad is not None:
+            normal_feats, normal_feats_lens = self.log_mel_spectrogram(normal_xs_pad, normal_ilens)
+        else:
+            normal_feats, normal_feats_lens = None, None
 
         if self.specaug is not None and self.encoders.training:
             feats = torch.transpose(feats, 1, 2)
             feats, feats_lens = self.specaug(feats, feats_lens)
             feats = torch.transpose(feats, 1, 2)
+            if normal_xs_pad is not None:
+                normal_feats = torch.transpose(normal_feats, 1, 2)
+                normal_feats, normal_feats_lens = self.specaug(normal_feats, normal_feats_lens)
+                normal_feats = torch.transpose(normal_feats, 1, 2)
 
-        xs_pad, olens = self.whisper_encode(feats, feats_lens)
+        xs_pad, olens, normal_xs_pad, normal_olens = self.whisper_encode(feats, feats_lens, normal_feats, normal_feats_lens)
 
-        return xs_pad, olens, None
+        return xs_pad, olens, normal_xs_pad, normal_olens, None

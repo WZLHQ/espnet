@@ -53,12 +53,6 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         whisper_model: str = "small",
         download_dir: Optional[str] = None,
         load_origin_token_embedding=False,
-        model_twins=False,
-        same_twins=False,
-        use_adapterH=False,
-        adapter_dim=35,
-        downsample_list=None,
-        bottleneck_list=None,
     ):
         try:
             import whisper
@@ -72,28 +66,12 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
 
         super().__init__()
 
-        self.model_twins=model_twins
-        self.same_twins=same_twins
-
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu", use_adapterH=use_adapterH, adapter_dim=adapter_dim, downsample_list=downsample_list, bottleneck_list=bottleneck_list
+            whisper_model, download_root=download_dir, device="cpu"
         )
-        
-        self.use_adapterH=use_adapterH
-
-        # we define "self.decoders" as student decoder
         self.decoders = copy.deepcopy(_model.decoder)
         attention_dim = self.decoders.token_embedding.embedding_dim
-
-        if self.model_twins:
-            if self.same_twins:
-                self.teacher_blocks = self.decoders.blocks
-            else:
-                # student encoder and teacher decoder share the "_model.decoder.blocks"-beside modules
-                # thus, we only deepcopy the _model.decoder.blocks as teacher
-                self.teacher_blocks = copy.deepcopy(_model.decoder.blocks)
-                self.teacher_blocks.train()
 
         # note that originally Whisper doesn't use dropouts
         self.dropout = torch.nn.Dropout(dropout_rate)
@@ -133,8 +111,6 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         self,
         hs_pad: torch.Tensor,
         hlens: torch.Tensor,
-        normal_hs_pad,
-        normal_hlens,
         ys_in_pad: torch.Tensor,
         ys_in_lens: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -155,77 +131,26 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
                 if use_output_layer is True,
             olens: (batch, )
         """
-        if self.model_twins:
+        tgt, memory = ys_in_pad, hs_pad
+        tgt = (
+            self.decoders.token_embedding(tgt)
+            + self.decoders.positional_embedding[: tgt.size(1)]
+        )
+        tgt = self.dropout(tgt)
 
-            #----------start forward student----------------#
-            tgt, memory = ys_in_pad, hs_pad
-            tgt = (
-                self.decoders.token_embedding(tgt)
-                + self.decoders.positional_embedding[: tgt.size(1)]
-            )
-            tgt = self.dropout(tgt)
+        x = tgt.to(memory.dtype)
 
-            x = tgt.to(memory.dtype)
+        for layer, block in enumerate(self.decoders.blocks):
+            x = block(x, memory, mask=self.decoders.mask)
+            if layer < len(self.decoders.blocks) - 1:
+                x = self.dropout(x)
 
-            # forward of student decoder blocks
-            for layer, block in enumerate(self.decoders.blocks):
-                x = block(x, memory, mask=self.decoders.mask)
-                if layer < len(self.decoders.blocks) - 1:
-                    x = self.dropout(x)
+        x = self.decoders.ln(x)
+        x = (
+            x @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
+        ).float()
 
-            x = self.decoders.ln(x)
-            x_student = (
-                x @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
-            ).float()
-            #----------end forward student----------------#
-
-
-            #----------start forward teacher----------------#
-            tgt, memory = ys_in_pad, normal_hs_pad
-            tgt = (
-                self.decoders.token_embedding(tgt)
-                + self.decoders.positional_embedding[: tgt.size(1)]
-            )
-            tgt = self.dropout(tgt)
-
-            x = tgt.to(memory.dtype)
-
-            # forward of teacher decoder blocks
-            for layer, block in enumerate(self.teacher_blocks):
-                x = block(x, memory, mask=self.decoders.mask)
-                if layer < len(self.teacher_blocks) - 1:
-                    x = self.dropout(x)
-
-            x = self.decoders.ln(x)
-            x_teacher = (
-                x @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
-            ).float()
-            #----------end forward teacher----------------#
-
-            return x_student, x_teacher, ys_in_lens
-
-
-        else:
-            tgt, memory = ys_in_pad, hs_pad
-            tgt = (
-                self.decoders.token_embedding(tgt)
-                + self.decoders.positional_embedding[: tgt.size(1)]
-            )
-            tgt = self.dropout(tgt)
-
-            x = tgt.to(memory.dtype)
-
-            for layer, block in enumerate(self.decoders.blocks):
-                x = block(x, memory, mask=self.decoders.mask)
-                if layer < len(self.decoders.blocks) - 1:
-                    x = self.dropout(x)
-
-            x = self.decoders.ln(x)
-            x = (
-                x @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
-            ).float()
-
-            return x, None, ys_in_lens
+        return x, ys_in_lens
 
     def forward_one_step(
         self,
