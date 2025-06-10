@@ -14,7 +14,7 @@ set -o pipefail
 
 #------------------Now only suport CDSD, AESRC, Librispeech100, Librilight10-------------------#
 # TODO: Add Aishell1, Kespeech, Fleurs.
-corpus=Librilight10
+corpus=Librispeech100
 
 # select from [whisper_multilingual, bpe, char]
 token_type=bpe

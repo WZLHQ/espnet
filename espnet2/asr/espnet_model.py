@@ -68,6 +68,7 @@ class ESPnetASRModel(AbsESPnetModel):
         # Pretrained HF Tokenizer needs custom sym_sos and sym_eos
         sym_sos: str = "<sos/eos>",
         sym_eos: str = "<sos/eos>",
+        temperature=1,
         extract_feats_in_collect_stats: bool = True,
         lang_token_id: int = -1,
     ):
@@ -89,6 +90,7 @@ class ESPnetASRModel(AbsESPnetModel):
             self.eos = token_list.index(sym_eos)
         else:
             self.eos = vocab_size - 1
+        self.temperature=temperature
         self.vocab_size = vocab_size
         self.ignore_id = ignore_id
         self.ctc_weight = ctc_weight
@@ -183,6 +185,7 @@ class ESPnetASRModel(AbsESPnetModel):
                 padding_idx=ignore_id,
                 smoothing=lsm_weight,
                 normalize_length=length_normalized_loss,
+                temperature=self.temperature,
             )
 
             if report_cer or report_wer:

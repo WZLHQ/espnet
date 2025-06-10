@@ -2348,7 +2348,26 @@ class AbsTask(ABC):
         # For finetuned model, create adapter
         use_adapter = getattr(args, "use_adapter", False)
         if use_adapter:
+            
             create_adapter(model, args.adapter, args.adapter_conf)
+
+            # if args.init_param exists, mean that the backbone is initialized by users.
+            # generally, we only save the trainable parameters, e.g., lora modules.
+            # Therefore the bulit model should be initialized again when use_adapter=True
+            for p in args.init_param:
+                logging.info(f"Loading pretrained params from {p}")
+                load_pretrained_model(
+                    model=model,
+                    init_param=p,
+                    ignore_init_mismatch=args.ignore_init_mismatch,
+                    # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
+                    #   in PyTorch<=1.4
+                    map_location=(
+                        f"cuda:{torch.cuda.current_device()}"
+                        if args.ngpu > 0
+                        else "cpu"
+                    ),
+                )
 
         if model_file is not None:
             if device == "cuda":

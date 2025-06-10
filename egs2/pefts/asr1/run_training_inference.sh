@@ -13,22 +13,52 @@ set -o pipefail
 
 
 #----------------------------training---------------------------#
-# ./run_training_inference.sh "CDSD-partA CDSD-partB Librilight10" LoraAdapterH hubert base "A3" 10 13 4 1 "--batch_bins 15000000 --adapter_conf bottleneck=144" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_new
-# ./run_training_inference.sh "CDSD-partA CDSD-partB Librilight10" LoraAdapterH hubert base "A4" 10 13 4 0 "--batch_bins 15000000 --adapter_conf bottleneck=288" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_new
+# ./run_training_inference.sh "Librispeech100" FT whisper small_en IASR-0 12 13 6 0 "" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test US_valid US_test UK_valid UK_test CHN_valid CHN_test JPN_valid JPN_test PT_valid PT_test RU_valid RU_test KR_valid KR_test CA_valid CA_test ES_valid ES_test"
+# 
+# ./run_training_inference.sh "IND" LoRA whisper small_en LoRA-IASR-0 12 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-0 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
+
+# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-0 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-1 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=5" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-2 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=0.5" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
+
+# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-0-0 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-0-1 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=1.2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-3 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=0.8" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-4 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=0.9" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
+
+# ./run_training_inference.sh "KR" FT whisper small_en IASR-FT-KR-0 10 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "KR_valid KR_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "KR" FT whisper small_en IASR-FT-KR-1 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "KR_valid KR_test Librispeech100_valid_clean Librispeech100_test_clean"
+
+# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-0 10 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-1 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-2 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
+
+# ./run_training_inference.sh "0to7-combined" LoRA whisper small_en IASR-LoRA-07-0 10 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "0to7-combined" LoRA whisper small_en IASR-LoRA-07-1 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
+# ./run_training_inference.sh "0to7-combined" LoRA whisper small_en IASR-LoRA-07-2 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
+
+# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-3 11 13 5 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean CA_valid CA_test ES_valid ES_test"
+# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-4 11 13 5 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean CA_valid CA_test ES_valid ES_test"
+# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-5 11 13 5 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean CA_valid CA_test ES_valid ES_test"
 
 
-# select from [CDSD-partA, CDSD-partB, Librilight10, Librispeech100] or any combination of them
+# select:
+# [CDSD-partA, CDSD-partB] from CDSD
+# [Librilight10, Librispeech100]
+# [US UK IND CHN JPN PT RU KR CA ES] from AESRC2020
 subcorpus=$1
 
-# select a method from [FT, LoRA, MosLoRA, MeLoRA, LoraAdapterH, ...]
-# NOTE that loraAdapterH denotes LoRA combines houslby adapter; FT denotes full-model fine-tuning
-# TODO add FT, Houlsby_Adapter, MeLoRA, VeRA, LanFusion, CAM, and so on.
+# select a method from [FT, LoRA]
+# TODO add Houlsby_Adapter, LoRA variants, LanFusion, CAM, and so on.
 method=$2
 
-# select from 
-# [whisper_small, whisper_medium, whisper_large, ...]
-# [hubert_base, hubert_large, hubert_xlarge]
+# select: 
+# [whisper, hubert]
 model=$3
+# select: 
+# [base, large] for hubert
+# [small, medium, small_en, medium_en] for Whisper
 model_size=$4
 
 # assign a special key for each experiment
@@ -46,13 +76,18 @@ inference_nj=$8
 export CUDA_VISIBLE_DEVICES=$9
 
 # args that overwrite the args in asr config.
-# for FT, you problem only need to specify the batch_bins and lr, thus "--batch_bins ** --optim_conf lr=***"
-# for lora, you might need to specify bs, lr, rank, alpha, thus "--batch_bins ** --optim_conf lr=*** --adapter_conf rank=1 --adapter_conf dropout_rat"
-# for LoraAdapterH adapter-only mode, "--batch_bins ** --optim_conf lr=*** --adapter_conf use_lora=false --adapter_conf bottleneck=**"
+# for FT, you only need to specify the batch_bins and lr, thus "--batch_bins ** --optim_conf lr=***"
+# for lora, you might need to specify bs, lr, rank, alpha, thus "--batch_bins ** --optim_conf lr=*** --adapter_conf rank=1 --adapter_conf dropout_rate"
 asr_args=${10}
 
 # output dir that contains all experiments
+# "/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR" for Incremental ASR
 explink=${11}
+
+# specify test sets
+# IND_valid IND_test US_valid US_test UK_valid UK_test CHN_valid CHN_test JPN_valid JPN_test PT_valid PT_test RU_valid RU_test KR_valid KR_test CA_valid CA_test ES_valid ES_test
+# Librispeech100_valid_clean Librispeech100_test_clean
+specify_test_set=${12}
 
 # 检查软连接是否存在
 if [ ! -d "espnet_outputs" ]; then
@@ -73,36 +108,44 @@ for sub in ${subcorpus}
 do
 
   # LM/ASR/decoding configuration
-  if [[ "$model" == *"w2v2"* ]] || [[ "$model" == *"hubert"* ]] || [[ "$model" == *"wavlm"* ]]; then
+  if [[ "$model" == *"hubert"* ]]; then
+      # SSL models do not need cleaner ??
+      cleaner=none
       inference_asr_model=valid.loss.ave.pth
       inference_config="conf/decoding/decode_asr_SSL_ctc_beam3.yaml"
       if [[ "$sub" == "Librilight10" ]]; then
-        token_type=bpe
+        token_type=bpe # or Char
         nbpe=300
       elif [[ "$sub" == "Librispeech100" ]]; then
-        token_type=bpe
+        token_type=bpe # or Char
         nbpe=5000
       elif [[ "$sub" == *"CDSD"* ]]; then
         token_type=char
         nbpe=1 # make no sense, just prevent from complain
       else
-       echo "please specify the corpus"
+       echo "please specify token_type for ${sub}"
        exit 1
       fi
-      # SSL models do not need cleaner
-      cleaner=none
+
   elif [[ "$model" == *"whisper"* ]]; then
-      if [[ "${sub}" == *"Libri"* ]]; then
-        # we change maxlenratio from 0.3 to 0.25, since 0.3 causes cuda-out-of-memory
-        inference_config="conf/decoding/decode_asr_whisper_noctc_beam3_maxlenratio0.25.yaml"
-      else
-        inference_config="conf/decoding/decode_asr_whisper_noctc_beam3.yaml" # maxlenratio is 0.3
-      fi
-      inference_asr_model=valid.acc.ave.pth
-      token_type=whisper_multilingual
-      nbpe=1 # make no sense, just prevent from complain
       # whisper models do need whisper_basic as cleaner
       cleaner=whisper_basic
+      inference_config="conf/decoding/decode_asr_whisper_noctc_beam3.yaml"
+
+      # you can specify the model
+      inference_asr_model=valid.acc.ave.pth
+
+      if [[ "${model_size}" == *"en"* ]]; then
+        token_type=whisper_en
+        whisper_language=en
+      else
+        token_type=whisper_multilingual
+        echo "please specify whisper_language for ${sub}"
+        exit 1
+      fi
+
+      nbpe=1 # make no sense, just prevent from complain
+
   else
       echo "Model not recognized. Please check the model name."
       exit 1
@@ -118,23 +161,23 @@ do
   fi
 
   # dataset
-  if [[ "${sub}" == *"Libri"* ]]; then
-    train_set="${sub}_train"
-    train_dev="Librispeech_valid"
-    # test_set="Librispeech_valid_clean Librispeech_valid_other Librispeech_test_clean Librispeech_test_other"
-    test_set="Librispeech_test_clean Librispeech_test_other"
-
+  train_set="${sub}_train"
+  train_dev="${sub}_valid"
+  if [[ "${specify_test_set}" == "" ]]; then
+    if [[ "${sub}" == *"Libri"* ]]; then
+      # test_set="${sub}_valid_clean ${sub}_valid_other ${sub}_test_clean ${sub}_test_other"
+      test_set="${sub}_valid_clean ${sub}_test_clean"
+    else
+      test_set="${sub}_valid ${sub}_test"
+    fi
   else
-    train_set="${sub}_train"
-    train_dev="${sub}_valid"
-    test_set="${sub}_valid ${sub}_test"
-
+    test_set=$specify_test_set
   fi
 
   for k in ${key}
   do
 
-    base_asr_config=conf/tuning_new/${method}/${model}_${model_size}_template.yaml
+    base_asr_config=conf/tuning/${method}/${model}_${model_size}_template.yaml
     asr_tag=${method}_${model}-${model_size}_${sub}-${k}
 
     ./asr.sh \
@@ -161,6 +204,7 @@ do
         --inference_config "${inference_config}"           \
         --lm_config "${lm_config}"                         \
         --cleaner "${cleaner}"                             \
+        --whisper_language ${whisper_language}             \
         --inference_asr_model "${inference_asr_model}"     \
         --inference_lm ${inference_lm}                     \
         --train_set "${train_set}"                         \
