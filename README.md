@@ -103,3 +103,13 @@ ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/transform
 # After you truely understand how it works, you can do the any combination among corpus, model, and method.
 ./run_training_inference.sh "Librilight10" LoRA hubert base "A0" 10 13 4 0 "--adapter_conf rank=8 --adapter_conf alpha=8" /*/espnet_outputs
 ```
+## 4 Notes
+1. data and dump for each corpus
+
+for aishell-1, data=/media/rosie/82d4699c-27bb-43ef-9c85-12afb307a971/espnet_datasets/aishell_data; dump=/media/rosie/82d4699c-27bb-43ef-9c85-12afb307a971/espnet_datasets/aishell-1
+
+for AESRC, librispeech100 and their combination, data=/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_datasets/AESRC2020/data; dump=/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_datasets/AESRC2020/dump_bpe
+
+for CDSD, librilight, and librispeech100, data=/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_datasets/data_dump_for_all/data; dump=/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_datasets/data_dump_for_all/dump
+
+for Kespeech, data=/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_datasets/kespeech_char/data; dump=/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_datasets/kespeech_char/raw
