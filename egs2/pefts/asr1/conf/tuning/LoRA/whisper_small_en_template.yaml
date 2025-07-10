@@ -31,6 +31,8 @@ model_conf:
     extract_feats_in_collect_stats: false
     sym_sos: "<|startoftranscript|>"
     sym_eos: "<|endoftext|>"
+    temperature: 1
+    lora_L2_norm_weight: 1
 
 # model selection
 best_model_criterion:

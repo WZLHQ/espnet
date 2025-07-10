@@ -3,6 +3,8 @@ encoder_conf:
     whisper_model: small.en
     dropout_rate: 0.0
     use_specaug: true
+    use_adapterH: true
+    adapter_dim: 64
     specaug_conf:
         apply_time_warp: true
         time_warp_window: 5
@@ -23,6 +25,8 @@ decoder: whisper
 decoder_conf:
     whisper_model: small.en
     dropout_rate: 0.0
+    use_adapterH: true
+    adapter_dim: 64
 
 model_conf:
     ctc_weight: 0.0
@@ -31,7 +35,7 @@ model_conf:
     extract_feats_in_collect_stats: false
     sym_sos: "<|startoftranscript|>"
     sym_eos: "<|endoftext|>"
-    temperature: 1
+    use_adapterH: true
 
 # model selection
 best_model_criterion:
@@ -78,7 +82,7 @@ valid_batch_size: 64 # large valid_batch_bins lead to large GPU memory, we can s
 max_epoch: 10
 optim: adamw
 optim_conf:
-    lr: 1.0e-05
+    lr: 5.0e-04
     weight_decay: 0.01
     betas:
     - 0.9

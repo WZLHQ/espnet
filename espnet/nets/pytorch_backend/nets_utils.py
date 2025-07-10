@@ -578,6 +578,7 @@ def get_activation(act):
         "relu": torch.nn.ReLU,
         "selu": torch.nn.SELU,
         "swish": Swish,
+        "gelu": torch.nn.GELU,
     }
 
     return activation_funcs[act]()

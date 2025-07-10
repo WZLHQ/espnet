@@ -34,6 +34,57 @@ else:
     def autocast(enabled=True):
         yield
 
+class WCALoss(torch.nn.Module):
+    def __init__(self, initial_encoder, initial_decoder, norm_type, WCALoss_reduction="none"):
+        super().__init__()
+        self.initial_encoder = initial_encoder
+        self.initial_decoder = initial_decoder
+        self.norm_type = str(norm_type) if norm_type is int else norm_type
+        self.reduction = WCALoss_reduction
+        
+    def forward(self, current_encoder, current_decoder, device):
+
+        norm_value = 0.0
+        count=0
+
+        # encoder
+        for n, p in current_encoder.items():
+            target_name=["query.weight","key.weight","value.weight","out.weight","mlp.0.weight","mlp.2.weight"]
+            if any(t in n for t in target_name):
+                count+=1
+                if self.norm_type=="1":
+                    norm_value += torch.norm((p-self.initial_encoder[n].to(device)), p='fro') ** 2
+                elif self.norm_type=="2":
+                    norm_value -= (
+                        (torch.nn.functional.cosine_similarity((p-self.initial_encoder[n].to(device)),self.initial_encoder[n].to(device))+1)/2
+                        ).mean()
+                elif self.norm_type=="3":
+                    # Elastic weight consolidation without sher information matrices 
+                    norm_value += ((p - self.initial_encoder[n].to(device)).pow(2)).sum()/2
+
+        # decoder
+        for n, p in current_decoder.items():
+            target_name=["query.weight","key.weight","value.weight","out.weight","mlp.0.weight","mlp.2.weight"]
+            if any(t in n for t in target_name):
+                count+=1
+                if self.norm_type=="1":
+                    norm_value += torch.norm((p-self.initial_decoder[n].to(device)), p='fro') ** 2
+                elif self.norm_type=="2":
+                    norm_value -= (
+                        (torch.nn.functional.cosine_similarity((p-self.initial_decoder[n].to(device)),self.initial_decoder[n].to(device))+1)/2
+                        ).mean()
+                elif self.norm_type=="3":
+                    # Elastic weight consolidation without sher information matrices 
+                    norm_value += ((p - self.initial_decoder[n].to(device)).pow(2)).sum()/2
+
+        if count==0:
+            return None
+        else:
+            if self.reduction=="mean":
+                return norm_value/count
+            elif self.reduction=="none":
+                return norm_value
+
 
 class ESPnetASRModel(AbsESPnetModel):
     """CTC-attention hybrid Encoder-Decoder model"""
@@ -68,9 +119,24 @@ class ESPnetASRModel(AbsESPnetModel):
         # Pretrained HF Tokenizer needs custom sym_sos and sym_eos
         sym_sos: str = "<sos/eos>",
         sym_eos: str = "<sos/eos>",
-        temperature=1,
         extract_feats_in_collect_stats: bool = True,
         lang_token_id: int = -1,
+
+        # for KLD loss
+        temperature=1,
+
+        # WCA and EWC related
+        lora_L2_norm_weight=1,
+        ft_L2_norm_weight=1,
+        LoRA_WCA=False,
+        FT_WCA=False,
+        WCA_norm_type="3",
+        WCALoss_reduction="none",
+        trainable_target_name=None,
+
+        # AdapterH related
+        use_adapterH=False,
+        
     ):
         assert 0.0 <= ctc_weight <= 1.0, ctc_weight
         assert 0.0 <= interctc_weight < 1.0, interctc_weight
@@ -104,6 +170,12 @@ class ESPnetASRModel(AbsESPnetModel):
         self.preencoder = preencoder
         self.postencoder = postencoder
         self.encoder = encoder
+
+        self.lora_L2_norm_weight=lora_L2_norm_weight
+        self.ft_L2_norm_weight=ft_L2_norm_weight
+        self.FT_WCA=FT_WCA
+        self.LoRA_WCA=LoRA_WCA
+        self.WCA_norm_type=WCA_norm_type
 
         if not hasattr(self.encoder, "interctc_use_conditioning"):
             self.encoder.interctc_use_conditioning = False
@@ -212,6 +284,41 @@ class ESPnetASRModel(AbsESPnetModel):
         else:
             self.lang_token_id = None
 
+        if trainable_target_name:
+            trainable_target_name=trainable_target_name.split(",")
+            for p in self.parameters():
+                p.requires_grad=False
+            for n, p in encoder.named_parameters():
+                if any(t in n for t in trainable_target_name):
+                    p.requires_grad=True
+            for n, p in decoder.named_parameters():
+                if any(t in n for t in trainable_target_name):
+                    p.requires_grad=True
+
+        if FT_WCA:
+            initial_encoder={}
+            initial_decoder={}
+            for n, p in encoder.named_parameters():
+                target_name=["query.weight","key.weight","value.weight","out.weight","mlp.0.weight","mlp.2.weight"]
+                if any(t in n for t in target_name):
+                    initial_encoder[n] = p.detach().clone()
+            for n, p in decoder.named_parameters():
+                target_name=["query.weight","key.weight","value.weight","out.weight","mlp.0.weight","mlp.2.weight"]
+                if any(t in n for t in target_name):
+                    initial_decoder[n] =p.detach().clone()
+            self.ft_wca_loss=WCALoss(initial_encoder,initial_decoder,WCA_norm_type,WCALoss_reduction)
+
+        if use_adapterH:
+            for p in self.parameters():
+                p.requires_grad=False
+            for n, p in encoder.named_parameters():
+                if "adapterH" in n or "CgAdapter" in n:
+                    p.requires_grad=True
+            for n, p in decoder.named_parameters():
+                if "adapterH" in n or "CgAdapter" in n:
+                    p.requires_grad=True
+
+
     def forward(
         self,
         speech: torch.Tensor,
@@ -255,6 +362,8 @@ class ESPnetASRModel(AbsESPnetModel):
         loss_ctc, cer_ctc = None, None
         loss_transducer, cer_transducer, wer_transducer = None, None, None
         loss_classif, acc_classif = None, None  # noqa
+        loss_lora_L2_norm=None
+        loss_ft_L2_norm=None
         stats = dict()
 
         # 1. CTC branch
@@ -362,6 +471,17 @@ class ESPnetASRModel(AbsESPnetModel):
             stats["acc"] = acc_att
             stats["cer"] = cer_att
             stats["wer"] = wer_att
+
+        if self.FT_WCA:
+            ft_l2_total=self.ft_wca_loss(dict(self.encoder.named_parameters()),dict(self.decoder.named_parameters()),loss.device)
+            stats["loss_ft_L2_norm"]=ft_l2_total.detach() if ft_l2_total is not None else None
+            loss = loss + ft_l2_total*self.ft_L2_norm_weight if ft_l2_total is not None else loss
+
+        if self.LoRA_WCA:
+            # L2 norm for A@B (LoRA weights)
+            lora_l2_total=self.get_LoRA_L2_norm()
+            stats["loss_lora_L2_norm"]=lora_l2_total.detach() if lora_l2_total is not None else None
+            loss = loss + lora_l2_total*self.lora_L2_norm_weight if lora_l2_total is not None else loss
 
         # Collect total loss stats
         stats["loss"] = loss.detach()
@@ -591,6 +711,62 @@ class ESPnetASRModel(AbsESPnetModel):
             cer_att, wer_att = self.error_calculator(ys_hat.cpu(), ys_pad.cpu())
 
         return loss_att, acc_att, cer_att, wer_att
+
+    def get_LoRA_L2_norm(self):
+
+        lora_l2_total = 0.0
+        norm=0
+
+        for block in self.encoder.encoders.blocks:
+            for layer_name in ["query", "key", "value", "out"]:
+                layer = getattr(block.attn, layer_name, None)
+                if layer and hasattr(layer, 'lora_A'):
+                    norm+=1
+                    A = layer.lora_A
+                    B = layer.lora_B
+                    AB = B @ A
+                    lora_l2_total += torch.norm(AB, p='fro') ** 2
+                    
+            for layer_name in ["0", "2"]:
+                layer = getattr(block.mlp, layer_name, None)
+                if layer and hasattr(layer, 'lora_A'):
+                    norm+=1
+                    A = layer.lora_A
+                    B = layer.lora_B
+                    AB = B @ A
+                    lora_l2_total += torch.norm(AB, p='fro') ** 2
+
+        for block in self.decoder.decoders.blocks:
+            for layer_name in ["query", "key", "value", "out"]:
+                layer = getattr(block.attn, layer_name, None)
+                if layer and hasattr(layer, 'lora_A'):
+                    norm+=1
+                    A = layer.lora_A
+                    B = layer.lora_B
+                    AB = B @ A
+                    lora_l2_total += torch.norm(AB, p='fro') ** 2
+
+                layer = getattr(block.cross_attn, layer_name, None)
+                if layer and hasattr(layer, 'lora_A'):
+                    norm+=1
+                    A = layer.lora_A
+                    B = layer.lora_B
+                    AB = B @ A
+                    lora_l2_total += torch.norm(AB, p='fro') ** 2
+
+            for layer_name in ["0", "2"]:
+                layer = getattr(block.mlp, layer_name, None)
+                if layer and hasattr(layer, 'lora_A'):
+                    norm+=1
+                    A = layer.lora_A
+                    B = layer.lora_B
+                    AB = B @ A
+                    lora_l2_total += torch.norm(AB, p='fro') ** 2
+
+        if norm==0:
+            return None
+        else:
+            return lora_l2_total/norm
 
     def _calc_ctc_loss(
         self,

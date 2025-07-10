@@ -1,6 +1,6 @@
 encoder: whisper
 encoder_conf:
-    whisper_model: small.en
+    whisper_model: small
     dropout_rate: 0.0
     use_specaug: true
     specaug_conf:
@@ -21,8 +21,13 @@ encoder_conf:
 
 decoder: whisper
 decoder_conf:
-    whisper_model: small.en
+    whisper_model: small
     dropout_rate: 0.0
+
+preprocessor: default
+preprocessor_conf:
+    whisper_language: zh # depends on the language
+    whisper_task: "transcribe"
 
 model_conf:
     ctc_weight: 0.0
