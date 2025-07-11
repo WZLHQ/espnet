@@ -202,6 +202,7 @@ class BatchBeamSearch(BeamSearch):
         # average fusion for both logits
         # NOTE that "proxy_scores" denotes logits now since we modify the batch_score()
         proxy_scores["proxy_decoder"],_= self.proxy_scorers["proxy_decoder"].batch_score(hyp.yseq, hyp.states[k], p_x)
+
         for k,v in scores.items():
             if "decoder" in k:
                 avg_logits=(v+proxy_scores["proxy_decoder"])/2

@@ -168,6 +168,7 @@ lm_fold_length=150         # fold_length for LM training.
 # added by QH
 whisper_language=
 local_data_dir= # to specify the local_*/data.sh for specific corpora
+use_proxy_tuning=false
 
 help_message=$(cat << EOF
 Usage: $0 --train-set "<train_set_name>" --valid-set "<valid_set_name>" --test_sets "<test_set_names>"
@@ -1560,6 +1561,8 @@ if [ ${stage} -le 12 ] && [ ${stop_stage} -ge 12 ] && ! [[ " ${skip_stages} " =~
             inference_bin_tag="_streaming"
         elif "${use_maskctc}"; then
             inference_bin_tag="_maskctc"
+        elif "${use_proxy_tuning}"; then # might be a bug
+            inference_bin_tag="_proxy_tuning"
         fi
     fi
 

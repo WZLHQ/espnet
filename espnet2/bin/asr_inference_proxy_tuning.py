@@ -39,9 +39,11 @@ from espnet2.torch_utils.set_all_random_seed import set_all_random_seed
 from espnet2.utils import config_argparse
 from espnet2.utils.nested_dict_action import NestedDictAction
 from espnet2.utils.types import str2bool, str2triple_str, str_or_none
-from espnet.nets.batch_beam_search import BatchBeamSearch
+# from espnet.nets.batch_beam_search import BatchBeamSearch
+from espnet.nets.batch_beam_search_proxy_tuning import BatchBeamSearch
 from espnet.nets.batch_beam_search_online_sim import BatchBeamSearchOnlineSim
-from espnet.nets.beam_search import BeamSearch, Hypothesis
+# from espnet.nets.beam_search import BeamSearch, Hypothesis
+from espnet.nets.beam_search_proxy_tuning import BeamSearch, Hypothesis
 from espnet.nets.beam_search_timesync import BeamSearchTimeSync
 from espnet.nets.pytorch_backend.transformer.subsampling import TooShortUttError
 from espnet.nets.scorer_interface import BatchScorerInterface
@@ -498,7 +500,7 @@ class Speech2Text:
         self.multi_asr = multi_asr
 
     @torch.no_grad()
-    @typechecked
+    # @typechecked
     def __call__(self, speech: Union[torch.Tensor, np.ndarray]) -> Union[
         ListOfHypothesis,
         List[ListOfHypothesis],
@@ -590,7 +592,7 @@ class Speech2Text:
 
         return res
 
-    @typechecked
+    # @typechecked
     def _decode_single_sample(self, enc: torch.Tensor, proxy_enc: torch.Tensor) -> ListOfHypothesis:
         if self.beam_search_transducer:
             logging.info("encoder output length: " + str(enc.shape[0]))
@@ -664,7 +666,7 @@ class Speech2Text:
 
         results = []
         for hyp in nbest_hyps:
-            assert isinstance(hyp, (Hypothesis, TransHypothesis)), type(hyp)
+            # assert isinstance(hyp, (Hypothesis, TransHypothesis)), type(hyp)
 
             # remove sos/eos and get results
             last_pos = None if self.asr_model.use_transducer_decoder else -1

@@ -7,51 +7,42 @@ set -o pipefail
 
 
 #----------------------------run logs-------------------------------#
+# ./run_training_inference.sh "CDSD-partA" FT whisper small A1 12 13 6 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/aishell-1_whisper_FT_outputs/asr_FT_whisper-small_aishell-1-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --max_epoch 7 --optim_conf lr=0.00005 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "dev_aishell-1 test_aishell-1"
+# ./run_training_inference.sh "CDSD-partA" FT whisper small A2 12 13 6 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/aishell-1_whisper_FT_outputs/asr_FT_whisper-small_aishell-1-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --max_epoch 7 --optim_conf lr=0.00001 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "dev_aishell-1 test_aishell-1"
+# ./run_training_inference.sh "CDSD-partA" FT whisper small A3 12 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/aishell-1_whisper_FT_outputs/asr_FT_whisper-small_aishell-1-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --max_epoch 7 --optim_conf lr=0.000005 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "dev_aishell-1 test_aishell-1"
+# ./run_training_inference.sh "CDSD-partA" FT whisper small A4 12 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/aishell-1_whisper_FT_outputs/asr_FT_whisper-small_aishell-1-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --max_epoch 7 --optim_conf lr=0.000001 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "dev_aishell-1 test_aishell-1"
 
+# ./run_training_inference.sh "CDSD-partA" FT whisper small A1-1 12 13 6 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/aishell-1_whisper_FT_outputs/asr_FT_whisper-small_aishell-1-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --max_epoch 3 --optim_conf lr=0.00005 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "dev_aishell-1 test_aishell-1"
 
-#----------------------------TODO-------------------------------#
+# ./run_training_inference.sh "CDSD-partB" FT whisper small A1 12 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/aishell-1_whisper_FT_outputs/asr_FT_whisper-small_aishell-1-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --max_epoch 7 --optim_conf lr=0.00005 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "dev_aishell-1 test_aishell-1"
+# ./run_training_inference.sh "CDSD-partB" FT whisper small A2 12 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/aishell-1_whisper_FT_outputs/asr_FT_whisper-small_aishell-1-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --max_epoch 7 --optim_conf lr=0.00001 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "dev_aishell-1 test_aishell-1"
+# ./run_training_inference.sh "CDSD-partB" FT whisper small A3 12 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/aishell-1_whisper_FT_outputs/asr_FT_whisper-small_aishell-1-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --max_epoch 7 --optim_conf lr=0.000005 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "dev_aishell-1 test_aishell-1"
+# ./run_training_inference.sh "CDSD-partB" FT whisper small A4 12 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/aishell-1_whisper_FT_outputs/asr_FT_whisper-small_aishell-1-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --max_epoch 7 --optim_conf lr=0.000001 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "dev_aishell-1 test_aishell-1"
 
+# ./run_training_inference.sh "CHN" FT whisper small_en test 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-1/valid.acc.ave_3best.pth --max_epoch 7 --optim_conf lr=0.000001 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR ""
+# ./run_training_inference.sh "CHN" FT whisper small_en test-1 12 13 1 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-1/valid.acc.ave_3best.pth --max_epoch 7 --optim_conf lr=0.000001 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR ""
+# ./run_training_inference.sh "CHN" LoRA whisper small_en test-1 12 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-1/valid.acc.ave_3best.pth --max_epoch 7 --optim_conf lr=0.000001 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR ""
+# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en test-2 12 13 1 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-1/valid.acc.ave_3best.pth --max_epoch 7 --optim_conf lr=0.000001 --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR ""
 
-#----------------------------training---------------------------#
-# ./run_training_inference.sh "Librispeech100" FT whisper small_en IASR-0 12 13 6 0 "" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test US_valid US_test UK_valid UK_test CHN_valid CHN_test JPN_valid JPN_test PT_valid PT_test RU_valid RU_test KR_valid KR_test CA_valid CA_test ES_valid ES_test"
-# 
-# ./run_training_inference.sh "IND" LoRA whisper small_en LoRA-IASR-0 12 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-0 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
-
-# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-0 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-1 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=5" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-2 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=0.5" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
-
-# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-0-0 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-0-1 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=1.2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-3 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=0.8" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "IND" FT whisper small_en IASR-FT-Temp-4 11 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=0.9" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "IND_valid IND_test Librispeech100_valid_clean Librispeech100_test_clean"
-
-# ./run_training_inference.sh "KR" FT whisper small_en IASR-FT-KR-0 10 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "KR_valid KR_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "KR" FT whisper small_en IASR-FT-KR-1 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "KR_valid KR_test Librispeech100_valid_clean Librispeech100_test_clean"
-
-# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-0 10 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-1 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-2 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
-
-# ./run_training_inference.sh "0to7-combined" LoRA whisper small_en IASR-LoRA-07-0 10 13 4 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "0to7-combined" LoRA whisper small_en IASR-LoRA-07-1 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
-# ./run_training_inference.sh "0to7-combined" LoRA whisper small_en IASR-LoRA-07-2 11 13 4 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean"
-
-# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-3 11 13 5 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean CA_valid CA_test ES_valid ES_test"
-# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-4 11 13 5 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean CA_valid CA_test ES_valid ES_test"
-# ./run_training_inference.sh "0to7-combined" FT whisper small_en IASR-FT-07-5 11 13 5 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-0/valid.acc.ave_3best.pth --scheduler_conf warmup_steps=1500 --model_conf temperature=1.2" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR "0to7-combined_valid 0to7-combined_test Librispeech100_valid_clean Librispeech100_test_clean CA_valid CA_test ES_valid ES_test"
+# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en test-3 12 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-small_en_Librispeech100-IASR-1/valid.acc.ave_3best.pth" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR ""
 
 
 # select:
 # [CDSD-partA, CDSD-partB] from CDSD
 # [Librilight10, Librispeech100]
 # [US UK IND CHN JPN PT RU KR CA ES] from AESRC2020
+# aishell-1
 subcorpus=$1
 
-# select a method from [FT, LoRA]
-# TODO add Houlsby_Adapter, LoRA variants, LanFusion, CAM, and so on.
+# select a method from [FT, LoRA, AdapterH, ProxyTuning]
+# TODO add LoRA variants, LanFusion, CAM, and so on.
 method=$2
+
+if [[ "${method}" == 'ProxyTuning' ]]; then
+  use_proxy_tuning=true
+else
+  use_proxy_tuning=false
+fi
 
 # select: 
 # [whisper, hubert]
@@ -140,8 +131,9 @@ do
         whisper_language=en
       else
         token_type=whisper_multilingual
-        echo "please specify whisper_language for ${sub}"
-        exit 1
+        whisper_language=zh
+        # echo "please specify whisper_language for ${sub}"
+        # exit 1
       fi
 
       nbpe=1 # make no sense, just prevent from complain
@@ -161,17 +153,29 @@ do
   fi
 
   # dataset
-  train_set="${sub}_train"
-  train_dev="${sub}_valid"
-  if [[ "${specify_test_set}" == "" ]]; then
-    if [[ "${sub}" == *"Libri"* ]]; then
-      # test_set="${sub}_valid_clean ${sub}_valid_other ${sub}_test_clean ${sub}_test_other"
-      test_set="${sub}_valid_clean ${sub}_test_clean"
+  if [[ "${sub}" == "aishell-1" ]]; then
+    train_set="train_${sub}"
+    train_dev="dev_${sub}"
+    if [[ "${specify_test_set}" == "" ]]; then
+      test_set="dev_${sub} test_${sub}"
     else
-      test_set="${sub}_valid ${sub}_test"
+      test_set=$specify_test_set
     fi
+
   else
-    test_set=$specify_test_set
+    train_set="${sub}_train"
+    train_dev="${sub}_valid"
+
+    if [[ "${specify_test_set}" == "" ]]; then
+      if [[ "${sub}" == *"Libri"* ]]; then
+        # test_set="${sub}_valid_clean ${sub}_valid_other ${sub}_test_clean ${sub}_test_other"
+        test_set="${sub}_valid_clean ${sub}_test_clean"
+      else
+        test_set="${sub}_valid ${sub}_test"
+      fi
+    else
+      test_set=$specify_test_set
+    fi
   fi
 
   for k in ${key}
@@ -207,6 +211,7 @@ do
         --whisper_language ${whisper_language}             \
         --inference_asr_model "${inference_asr_model}"     \
         --inference_lm ${inference_lm}                     \
+        --use_proxy_tuning ${use_proxy_tuning}             \
         --train_set "${train_set}"                         \
         --valid_set "${train_dev}"                         \
         --test_sets "${test_set}"            \

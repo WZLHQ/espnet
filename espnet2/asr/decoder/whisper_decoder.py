@@ -53,6 +53,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         whisper_model: str = "small",
         download_dir: Optional[str] = None,
         load_origin_token_embedding=False,
+        use_proxy_tuning=False,
     ):
         try:
             import whisper
@@ -106,6 +107,8 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
 
         self.decoders.train()
         del _model
+        
+        self.use_proxy_tuning=use_proxy_tuning
 
     def forward(
         self,
@@ -193,7 +196,9 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         y = (
             y @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
         ).float()
-        y = torch.log_softmax(y, dim=-1)
+
+        if not self.use_proxy_tuning:
+            y = torch.log_softmax(y, dim=-1)
 
         return y, None
 
@@ -224,4 +229,5 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         # batch decoding, dummy mask is passed
         logp, states = self.forward_one_step(ys, torch.empty(0), xs, cache=None)
 
+        # NOTE that logp is no more probability, but logits
         return logp, None
