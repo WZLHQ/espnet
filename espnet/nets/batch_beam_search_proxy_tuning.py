@@ -7,7 +7,8 @@ import torch
 from packaging.version import parse as V
 from torch.nn.utils.rnn import pad_sequence
 
-from espnet.nets.beam_search import BeamSearch, Hypothesis
+# from espnet.nets.beam_search import BeamSearch, Hypothesis
+from espnet.nets.beam_search_proxy_tuning import BeamSearch, Hypothesis
 
 is_torch_1_9_plus = V(torch.__version__) >= V("1.9.0")
 
@@ -201,14 +202,14 @@ class BatchBeamSearch(BeamSearch):
 
         # average fusion for both logits
         # NOTE that "proxy_scores" denotes logits now since we modify the batch_score()
-        proxy_scores["proxy_decoder"],_= self.proxy_scorers["proxy_decoder"].batch_score(hyp.yseq, hyp.states[k], p_x)
+        proxy_scores["proxy_decoder"],_= self.proxy_scorers["proxy_decoder"].batch_score(hyp.yseq, None, p_x)
 
         for k,v in scores.items():
             if "decoder" in k:
                 avg_logits=(v+proxy_scores["proxy_decoder"])/2
                 # NOTE that NOW the "scores" denotes scores (i.e., log probabilities)
                 scores[k]=torch.log_softmax(avg_logits, dim=-1)
-
+                
         if self.return_hs:
             return hs, scores, states
         return scores, states

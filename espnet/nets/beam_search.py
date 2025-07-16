@@ -37,7 +37,6 @@ class BeamSearch(torch.nn.Module):
     def __init__(
         self,
         scorers: Dict[str, ScorerInterface],
-        proxy_scorers,
         weights: Dict[str, float],
         beam_size: int,
         vocab_size: int,
@@ -75,7 +74,6 @@ class BeamSearch(torch.nn.Module):
         # set scorers
         self.weights = weights
         self.scorers = dict()
-        self.proxy_scorers=proxy_scorers
         self.full_scorers = dict()
         self.part_scorers = dict()
         # this module dict is required for recursive cast
@@ -93,10 +91,6 @@ class BeamSearch(torch.nn.Module):
                 self.part_scorers[k] = v
             else:
                 self.full_scorers[k] = v
-            if isinstance(v, torch.nn.Module):
-                self.nn_dict[k] = v
-
-        for k, v in proxy_scorers.items():
             if isinstance(v, torch.nn.Module):
                 self.nn_dict[k] = v
 
@@ -391,7 +385,6 @@ class BeamSearch(torch.nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        p_x: torch.Tensor,
         maxlenratio: float = 0.0,
         minlenratio: float = 0.0,
         pre_x: torch.Tensor = None,
@@ -441,7 +434,7 @@ class BeamSearch(torch.nn.Module):
         ended_hyps = []
         for i in range(maxlen):
             logger.debug("position " + str(i))
-            best = self.search(running_hyps, x, p_x, pre_x=pre_x)
+            best = self.search(running_hyps, x, pre_x=pre_x)
             # post process of one iteration
             running_hyps = self.post_process(
                 i, maxlen, minlen, maxlenratio, best, ended_hyps

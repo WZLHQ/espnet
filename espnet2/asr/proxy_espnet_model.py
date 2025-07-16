@@ -25,6 +25,8 @@ from espnet.nets.pytorch_backend.transformer.add_sos_eos import add_sos_eos
 from espnet.nets.pytorch_backend.transformer.label_smoothing_loss import (  # noqa: H301
     LabelSmoothingLoss,
 )
+import torch.nn as nn
+from torch import Tensor
 
 if V(torch.__version__) >= V("1.6.0"):
     from torch.cuda.amp import autocast
@@ -33,6 +35,32 @@ else:
     @contextmanager
     def autocast(enabled=True):
         yield
+
+class LayerNorm(nn.LayerNorm):
+    def forward(self, x: Tensor) -> Tensor:
+        return super().forward(x.float()).type(x.dtype)
+
+class Houlsby_Adapter(nn.Module):
+    def __init__(
+        self,
+        input_size: int,
+        bottleneck: int,
+        output_size: int,
+        droupout_rate=0.05,
+    ):
+        super(Houlsby_Adapter, self).__init__()
+
+        self.houlsby_adapter = nn.Sequential(
+            LayerNorm(input_size),
+            nn.Linear(input_size, bottleneck),
+            nn.GELU(),
+            nn.Linear(bottleneck, output_size),
+        )
+        self.dropout=torch.nn.Dropout(droupout_rate)
+
+    def forward(self, x):
+        x=self.houlsby_adapter(x)
+        return self.dropout(x)
 
 
 class ProxyESPnetASRModel(AbsESPnetModel):
@@ -74,6 +102,8 @@ class ProxyESPnetASRModel(AbsESPnetModel):
 
         proxy_encoder=None,
         proxy_decoder=None,
+        trainable_target_name=None,
+        proxy_logits_weight=0.5,
     ):
         assert 0.0 <= ctc_weight <= 1.0, ctc_weight
         assert 0.0 <= interctc_weight < 1.0, interctc_weight
@@ -108,6 +138,9 @@ class ProxyESPnetASRModel(AbsESPnetModel):
         self.postencoder = postencoder
         self.encoder = encoder
         self.proxy_encoder=proxy_encoder
+        self.proxy_logits_weight=proxy_logits_weight
+
+        self.iepoch=None
 
         self.use_transducer_decoder = joint_network is not None
         self.use_linear_decoder = isinstance(decoder, LinearDecoder)
@@ -209,15 +242,35 @@ class ProxyESPnetASRModel(AbsESPnetModel):
             self.lang_token_id = torch.tensor([[lang_token_id]])
         else:
             self.lang_token_id = None
-        
-        self.define_trainable_parameters()
 
-    def define_trainable_parameters(self):
+        # note 768,128,384 is good for proxy tiny_en
+        # note 768,256,384 is good for proxy base_en
+        self.houlsby_adapter = nn.ModuleList(
+            [Houlsby_Adapter(768,128,384) for _ in [1,2]]
+        )
+
+        self.define_trainable_parameters(trainable_target_name)
+
+    def define_trainable_parameters(self,trainable_target_name):
+
         for p in self.parameters():
             p.requires_grad=False
-        for p in self.proxy_encoder.parameters():
-            p.requires_grad=True
-        for p in self.proxy_decoder.parameters():
+
+        if trainable_target_name:
+            trainable_target_name=trainable_target_name.split(",")
+            for n, p in self.proxy_encoder.named_parameters():
+                if any(t in n for t in trainable_target_name):
+                    p.requires_grad=True
+            for n, p in self.proxy_decoder.named_parameters():
+                if any(t in n for t in trainable_target_name):
+                    p.requires_grad=True
+        else:
+            for p in self.proxy_encoder.parameters():
+                p.requires_grad=True
+            for p in self.proxy_decoder.parameters():
+                p.requires_grad=True
+
+        for p in self.houlsby_adapter.parameters():
             p.requires_grad=True
 
     def forward(
@@ -417,9 +470,13 @@ class ProxyESPnetASRModel(AbsESPnetModel):
         # 4. Forward encoder
         # feats: (Batch, Length, Dim)
         # -> encoder_out: (Batch, Length2, Dim2)
-        encoder_out, encoder_out_lens, _ = self.encoder(feats, feats_lengths)
+        encoder_out, encoder_out_lens, layer_results, _ = self.encoder(feats, feats_lengths)
+
+        # project the dimension of layer_results to desired one
+        layer_results=[self.houlsby_adapter[id](layer_result) for id, layer_result in enumerate(layer_results)]
+
         # forward proxy encoder
-        proxy_encoder_out, proxy_encoder_out_lens, _ = self.proxy_encoder(feats, feats_lengths)
+        proxy_encoder_out, proxy_encoder_out_lens, _, _ = self.proxy_encoder(feats, feats_lengths, layer_results)
 
         assert encoder_out.size(0) == speech.size(0), (
             encoder_out.size(),
@@ -564,20 +621,27 @@ class ProxyESPnetASRModel(AbsESPnetModel):
         ys_in_lens = ys_pad_lens + 1
 
         # 1. Forward decoder
-        decoder_out, _ = self.decoder(
+        decoder_out, _, layer_results = self.decoder(
             encoder_out, encoder_out_lens, ys_in_pad, ys_in_lens
         )
 
         # Forward proxy decoder
-        proxy_decoder_out, _ = self.proxy_decoder(
-            proxy_encoder_out, proxy_encoder_out_lens, ys_in_pad, ys_in_lens
+        proxy_decoder_out, _, _ = self.proxy_decoder(
+            proxy_encoder_out, proxy_encoder_out_lens, ys_in_pad, ys_in_lens, layer_results
         )
-        
+
         # average fusion for decoder_out and proxy_decoder_out
-        decoder_out = (decoder_out+proxy_decoder_out)/2
+        decoder_out = proxy_decoder_out*self.proxy_logits_weight + decoder_out*(1-self.proxy_logits_weight)
+
+        # fusion_weight=self.linear_decay_weight()
+        # decoder_out = proxy_decoder_out*fusion_weight + decoder_out*(1-fusion_weight)
+
+        # add fusion for both decoder_out and proxy_decoder_out
+        # decoder_out = proxy_decoder_out + decoder_out
 
         # 2. Compute attention loss
         loss_att = self.criterion_att(decoder_out, ys_out_pad)
+
         acc_att = th_accuracy(
             decoder_out.view(-1, self.vocab_size),
             ys_out_pad,
@@ -717,3 +781,6 @@ class ProxyESPnetASRModel(AbsESPnetModel):
         loss_classif = self.criterion_classif(logits, labels.squeeze(-1))
         acc_classif = th_accuracy(logits, labels, ignore_label=self.ignore_id)
         return loss_classif, acc_classif
+
+    def linear_decay_weight(self):
+        return 1-self.iepoch*(1/20)

@@ -40,6 +40,7 @@ def load_pretrained_model(
     init_param: str,
     model: torch.nn.Module,
     ignore_init_mismatch: bool,
+    id=0,
     map_location: str = "cpu",
 ):
     """Load a model state and set it to the model.
@@ -97,6 +98,10 @@ def load_pretrained_model(
         obj = get_attr(model, dst_key)
 
     src_state = torch.load(path, map_location=map_location)
+    if id==1:
+        src_state={k.replace("encoder.", "proxy_encoder."): v for k, v in src_state.items()}
+        src_state={k.replace("decoder.", "proxy_decoder."): v for k, v in src_state.items()}
+
     if excludes is not None:
         for e in excludes.split(","):
             src_state = {k: v for k, v in src_state.items() if not k.startswith(e)}

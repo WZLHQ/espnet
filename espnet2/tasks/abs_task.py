@@ -1485,12 +1485,13 @@ class AbsTask(ABC):
             )
         else:
             # 6. Loads pre-trained model
-            for p in args.init_param:
+            for id, p in enumerate(args.init_param):
                 logging.info(f"Loading pretrained params from {p}")
                 load_pretrained_model(
                     model=model,
                     init_param=p,
                     ignore_init_mismatch=args.ignore_init_mismatch,
+                    id=id,
                     # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
                     #   in PyTorch<=1.4
                     map_location=(

@@ -144,7 +144,6 @@ class Speech2Text:
 
         # 1. Build ASR model
         scorers = {}
-        proxy_scorers = {}
         asr_model, asr_train_args = task.build_model_from_file(
             asr_train_config, asr_model_file, device
         )
@@ -171,7 +170,6 @@ class Speech2Text:
             )
 
         decoder = asr_model.decoder
-        proxy_decoder = asr_model.proxy_decoder
 
         ctc = CTCPrefixScorer(ctc=asr_model.ctc, eos=asr_model.eos)
         token_list = asr_model.token_list
@@ -179,9 +177,6 @@ class Speech2Text:
             decoder=decoder,
             ctc=ctc,
             length_bonus=LengthBonus(len(token_list)),
-        )
-        proxy_scorers.update(
-            proxy_decoder=proxy_decoder,
         )
 
         # 2. Build Language model
@@ -363,7 +358,6 @@ class Speech2Text:
                     beam_size=beam_size,
                     weights=weights,
                     scorers=scorers,
-                    proxy_scorers=proxy_scorers,
                     sos=asr_model.sos,
                     eos=asr_model.eos,
                     vocab_size=len(token_list),
@@ -531,8 +525,7 @@ class Speech2Text:
         batch = to_device(batch, device=self.device)
 
         # b. Forward Encoder
-        enc, enc_olens, proxy_enc, proxy_enc_olens = self.asr_model.encode(**batch)
-
+        enc, enc_olens = self.asr_model.encode(**batch)
         if self.multi_asr:
             enc = enc.unbind(dim=1)  # (batch, num_inf, ...) -> num_inf x [batch, ...]
         if self.enh_s2t_task or self.multi_asr:
@@ -563,7 +556,7 @@ class Speech2Text:
             assert len(enc) == 1, len(enc)
 
             # c. Passed the encoder result and the beam search
-            results = self._decode_single_sample(enc[0],proxy_enc[0])
+            results = self._decode_single_sample(enc[0])
 
             # Encoder intermediate CTC predictions
             if intermediate_outs is not None:
@@ -591,7 +584,7 @@ class Speech2Text:
         return res
 
     @typechecked
-    def _decode_single_sample(self, enc: torch.Tensor, proxy_enc: torch.Tensor) -> ListOfHypothesis:
+    def _decode_single_sample(self, enc: torch.Tensor) -> ListOfHypothesis:
         if self.beam_search_transducer:
             logging.info("encoder output length: " + str(enc.shape[0]))
             nbest_hyps = self.beam_search_transducer(enc)
@@ -657,7 +650,7 @@ class Speech2Text:
                         if hasattr(module, "setup_step"):
                             module.setup_step()
             nbest_hyps = self.beam_search(
-                x=enc, p_x=proxy_enc, maxlenratio=self.maxlenratio, minlenratio=self.minlenratio
+                x=enc, maxlenratio=self.maxlenratio, minlenratio=self.minlenratio
             )
 
         nbest_hyps = nbest_hyps[: self.nbest]

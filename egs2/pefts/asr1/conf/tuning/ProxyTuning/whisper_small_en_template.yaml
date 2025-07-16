@@ -2,6 +2,7 @@ encoder: whisper
 encoder_conf:
     whisper_model: small.en
     dropout_rate: 0.0
+    return_layer_results: true
     # do_pad_trim: true         # should be set when doing zero-shot inference
 
 decoder: whisper
@@ -9,6 +10,7 @@ decoder_conf:
     whisper_model: small.en
     dropout_rate: 0.0
     use_proxy_tuning: true
+    return_layer_results: false
 
 proxy_encoder: whisper
 proxy_encoder_conf:
@@ -21,6 +23,7 @@ proxy_decoder_conf:
     whisper_model: tiny.en
     dropout_rate: 0.0
     use_proxy_tuning: true
+    use_decoder_fusion_module: false
 
 model: proxy_espnet
 model_conf:
@@ -60,9 +63,11 @@ use_amp: true
 cudnn_deterministic: false
 cudnn_benchmark: false
 accum_grad: 1
-patience: none
+patience: 3
 log_interval: 50
-init_param: []
+# tuned tiny_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_tiny_en_ATT-MLP-tuned_on_Librispeech100.pth
+# tuned base_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_base_en_ATT-MLP-tuned_on_Librispeech100.pth
+init_param: ["/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth", "/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_tiny_en_ATT-MLP-tuned_on_Librispeech100.pth"]
 
 # -------------hyper-paramters below might should be specified depend on specific corpus-----------------#
 
@@ -84,4 +89,4 @@ optim_conf:
     eps: 1.0e-06
 scheduler: warmuplr
 scheduler_conf:
-    warmup_steps: 500
+    warmup_steps: 1500

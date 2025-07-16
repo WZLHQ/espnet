@@ -1,12 +1,12 @@
 encoder: whisper
 encoder_conf:
-    whisper_model: small.en
+    whisper_model: large
     dropout_rate: 0.0
     # do_pad_trim: true         # should be set when doing zero-shot inference
 
 decoder: whisper
 decoder_conf:
-    whisper_model: small.en
+    whisper_model: large
     dropout_rate: 0.0
 
 model_conf:
@@ -16,6 +16,7 @@ model_conf:
     extract_feats_in_collect_stats: false
     sym_sos: "<|startoftranscript|>"
     sym_eos: "<|endoftext|>"
+    temperature: 1
 
 # model selection
 best_model_criterion:
@@ -48,21 +49,20 @@ accum_grad: 1
 patience: 3
 log_interval: 50
 init_param: []
-ignore_init_mismatch: true
 
 # -------------hyper-paramters below might should be specified depend on specific corpus-----------------#
 
 # minibatch related
 batch_type: folded
-batch_size: 72
+batch_size: 1
 valid_batch_type: folded
-valid_batch_size: 64 # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
+valid_batch_size: 1 # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
 
 # optimization
 max_epoch: 10
 optim: adamw
 optim_conf:
-    lr: 5.0e-04
+    lr: 1.0e-05
     weight_decay: 0.01
     betas:
     - 0.9
@@ -71,13 +71,3 @@ optim_conf:
 scheduler: warmuplr
 scheduler_conf:
     warmup_steps: 1500
-
-# LoRA finetune related
-use_adapter: true
-adapter: lora
-save_strategy: required_grad_only
-adapter_conf:
-    rank: 96
-    alpha: 96
-    dropout_rate: 0.05
-    target_modules: ["query", "key", "value", "attn.out", "mlp.0", "mlp.2"]

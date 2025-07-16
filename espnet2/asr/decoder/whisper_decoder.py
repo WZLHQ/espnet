@@ -54,6 +54,8 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         download_dir: Optional[str] = None,
         load_origin_token_embedding=False,
         use_proxy_tuning=False,
+        return_layer_results=False,
+        use_decoder_fusion_module=False,
     ):
         try:
             import whisper
@@ -69,7 +71,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
 
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu"
+            whisper_model, download_root=download_dir, device="cpu", use_decoder_fusion_module=use_decoder_fusion_module
         )
         self.decoders = copy.deepcopy(_model.decoder)
         attention_dim = self.decoders.token_embedding.embedding_dim
@@ -109,6 +111,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         del _model
         
         self.use_proxy_tuning=use_proxy_tuning
+        self.return_layer_results = return_layer_results
 
     def forward(
         self,
@@ -116,6 +119,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         hlens: torch.Tensor,
         ys_in_pad: torch.Tensor,
         ys_in_lens: torch.Tensor,
+        prev_states=None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Forward decoder.
 
@@ -143,17 +147,41 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
 
         x = tgt.to(memory.dtype)
 
+        layer_results=[]
+
         for layer, block in enumerate(self.decoders.blocks):
-            x = block(x, memory, mask=self.decoders.mask)
+            
+            if prev_states:
+                if layer >0 and layer < 3:
+                    x = block(
+                        (x+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1]))/2
+                        )
+                else:
+                    x = block(
+                        x,
+                        memory,
+                        mask=self.decoders.mask
+                        )
+            else:
+                x = block(
+                    x,
+                    memory,
+                    mask=self.decoders.mask
+                    )
+
             if layer < len(self.decoders.blocks) - 1:
                 x = self.dropout(x)
+
+            if self.return_layer_results:
+                if layer in [0,8]:
+                    layer_results.append(x)
 
         x = self.decoders.ln(x)
         x = (
             x @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
         ).float()
 
-        return x, ys_in_lens
+        return x, ys_in_lens, layer_results if self.return_layer_results else None
 
     def forward_one_step(
         self,

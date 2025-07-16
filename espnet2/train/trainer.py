@@ -337,6 +337,9 @@ class Trainer:
             set_all_random_seed(trainer_options.seed + iepoch)
 
             reporter.set_epoch(iepoch)
+
+            dp_model.iepoch=iepoch
+
             # 1. Train and validation for one-epoch
             torch.cuda.empty_cache()
             with reporter.observe("train") as sub_reporter:

@@ -25,6 +25,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
         use_specaug: bool = False,
         specaug_conf: Union[dict, None] = None,
         do_pad_trim: bool = False,
+        return_layer_results=False,
     ):
         try:
             import whisper
@@ -65,6 +66,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
 
         self.do_pad_trim = do_pad_trim
         self.pad_samples = N_SAMPLES
+        self.return_layer_results = return_layer_results
 
     def output_size(self) -> int:
         return self.encoders.ln_post.normalized_shape[-1]
@@ -127,6 +129,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
         self,
         input: torch.Tensor,
         ilens: torch.Tensor = None,
+        prev_states=None,
     ) -> torch.Tensor:
         x = F.gelu(self.encoders.conv1(input))
         x = F.gelu(self.encoders.conv2(x))
@@ -142,10 +145,26 @@ class OpenAIWhisperEncoder(AbsEncoder):
 
         x = self.dropout(x)
 
+        layer_results=[]
+        
         for layer, block in enumerate(self.encoders.blocks):
-            x = block(x)
+
+            if prev_states:
+                if layer >0 and layer < 3:
+                    x = block(
+                        (x+prev_states[layer-1])/2
+                        )
+                else:
+                    x=block(x)
+            else:
+                x=block(x)
+
             if layer < len(self.encoders.blocks) - 1:
                 x = self.dropout(x)
+
+            if self.return_layer_results:
+                if layer in [0,8]:
+                    layer_results.append(x)
 
         x = self.encoders.ln_post(x)
 
@@ -163,7 +182,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
         else:
             olens = None
 
-        return x, olens
+        return x, olens, layer_results if self.return_layer_results else None
 
     def forward(
         self,
@@ -181,6 +200,5 @@ class OpenAIWhisperEncoder(AbsEncoder):
             feats, feats_lens = self.specaug(feats, feats_lens)
             feats = torch.transpose(feats, 1, 2)
 
-        xs_pad, olens = self.whisper_encode(feats, feats_lens)
-
-        return xs_pad, olens, None
+        xs_pad, olens, layer_results = self.whisper_encode(feats, feats_lens, prev_states)
+        return xs_pad, olens, layer_results, None

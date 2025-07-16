@@ -162,7 +162,6 @@ class BatchBeamSearch(BeamSearch):
         self,
         hyp: BatchHypothesis,
         x: torch.Tensor,
-        p_x: torch.Tensor,
         pre_x: torch.Tensor = None,
     ) -> Tuple[Dict[str, torch.Tensor], Dict[str, Any]]:
         """Score new hypothesis by `self.full_scorers`.
@@ -184,29 +183,15 @@ class BatchBeamSearch(BeamSearch):
         """
         scores = dict()
         states = dict()
-        proxy_scores=dict()
         for k, d in self.full_scorers.items():
             if "decoder" in k and self.return_hs:
-                raise NotImplementedError
                 (scores[k], hs), states[k] = d.batch_score(
                     hyp.yseq, hyp.states[k], x, return_hs=self.return_hs
                 )
             elif "decoder" in k and pre_x is not None:
-                raise NotImplementedError
                 scores[k], states[k] = d.batch_score(hyp.yseq, hyp.states[k], x, pre_x)
             else:
-                # forward this branch
-                # NOTE that "scores" denotes logits now since we modify the batch_score()
                 scores[k], states[k] = d.batch_score(hyp.yseq, hyp.states[k], x)
-
-        # average fusion for both logits
-        # NOTE that "proxy_scores" denotes logits now since we modify the batch_score()
-        proxy_scores["proxy_decoder"],_= self.proxy_scorers["proxy_decoder"].batch_score(hyp.yseq, hyp.states[k], p_x)
-        for k,v in scores.items():
-            if "decoder" in k:
-                avg_logits=(v+proxy_scores["proxy_decoder"])/2
-                # NOTE that NOW the "scores" denotes scores (i.e., log probabilities)
-                scores[k]=torch.log_softmax(avg_logits, dim=-1)
 
         if self.return_hs:
             return hs, scores, states
@@ -241,12 +226,10 @@ class BatchBeamSearch(BeamSearch):
         states = dict()
         for k, d in self.part_scorers.items():
             if "ctc" in k and pre_x is not None:
-                raise NotImplementedError
                 scores[k], states[k] = d.batch_score_partial(
                     hyp.yseq, ids, hyp.states[k], pre_x
                 )
             else:
-                raise NotImplementedError
                 scores[k], states[k] = d.batch_score_partial(
                     hyp.yseq, ids, hyp.states[k], x
                 )
@@ -277,7 +260,6 @@ class BatchBeamSearch(BeamSearch):
         self,
         running_hyps: BatchHypothesis,
         x: torch.Tensor,
-        p_x: torch.Tensor,
         pre_x: torch.Tensor = None,
     ) -> BatchHypothesis:
         """Search new tokens for running hypotheses and encoded speech x.
@@ -298,7 +280,6 @@ class BatchBeamSearch(BeamSearch):
             n_batch, self.n_vocab, dtype=x.dtype, device=x.device
         )
         if self.return_hs:
-            raise NotImplementedError
             hs, scores, states = self.score_full(
                 running_hyps,
                 x.expand(n_batch, *x.shape),
@@ -306,11 +287,10 @@ class BatchBeamSearch(BeamSearch):
                     pre_x.expand(n_batch, *pre_x.shape) if pre_x is not None else None
                 ),
             )
-        else: # forward this branch
+        else:
             scores, states = self.score_full(
                 running_hyps,
                 x.expand(n_batch, *x.shape),
-                p_x.expand(n_batch, *p_x.shape),
                 pre_x=(
                     pre_x.expand(n_batch, *pre_x.shape) if pre_x is not None else None
                 ),
@@ -318,9 +298,8 @@ class BatchBeamSearch(BeamSearch):
 
         for k in self.full_scorers:
             weighted_scores += self.weights[k] * scores[k]
-        
         # partial scoring
-        if self.do_pre_beam: # false by default
+        if self.do_pre_beam:
             pre_beam_scores = (
                 weighted_scores
                 if self.pre_beam_score_key == "full"

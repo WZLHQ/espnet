@@ -71,6 +71,8 @@ class ESPnetASRModel(AbsESPnetModel):
         temperature=1,
         extract_feats_in_collect_stats: bool = True,
         lang_token_id: int = -1,
+
+        trainable_target_name=None,
     ):
         assert 0.0 <= ctc_weight <= 1.0, ctc_weight
         assert 0.0 <= interctc_weight < 1.0, interctc_weight
@@ -211,6 +213,17 @@ class ESPnetASRModel(AbsESPnetModel):
             self.lang_token_id = torch.tensor([[lang_token_id]])
         else:
             self.lang_token_id = None
+
+        if trainable_target_name:
+            trainable_target_name=trainable_target_name.split(",")
+            for p in self.parameters():
+                p.requires_grad=False
+            for n, p in encoder.named_parameters():
+                if any(t in n for t in trainable_target_name):
+                    p.requires_grad=True
+            for n, p in decoder.named_parameters():
+                if any(t in n for t in trainable_target_name):
+                    p.requires_grad=True
 
     def forward(
         self,
@@ -416,7 +429,7 @@ class ESPnetASRModel(AbsESPnetModel):
                 feats, feats_lengths, ctc=self.ctc
             )
         else:
-            encoder_out, encoder_out_lens, _ = self.encoder(feats, feats_lengths)
+            encoder_out, encoder_out_lens, _, _ = self.encoder(feats, feats_lengths)
         intermediate_outs = None
         if isinstance(encoder_out, tuple):
             intermediate_outs = encoder_out[1]
@@ -571,7 +584,7 @@ class ESPnetASRModel(AbsESPnetModel):
         ys_in_lens = ys_pad_lens + 1
 
         # 1. Forward decoder
-        decoder_out, _ = self.decoder(
+        decoder_out, _, _ = self.decoder(
             encoder_out, encoder_out_lens, ys_in_pad, ys_in_lens
         )
 

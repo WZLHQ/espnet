@@ -1,12 +1,12 @@
 encoder: whisper
 encoder_conf:
-    whisper_model: small.en
+    whisper_model: large
     dropout_rate: 0.0
     # do_pad_trim: true         # should be set when doing zero-shot inference
 
 decoder: whisper
 decoder_conf:
-    whisper_model: small.en
+    whisper_model: large
     dropout_rate: 0.0
 
 model_conf:
@@ -54,9 +54,9 @@ ignore_init_mismatch: true
 
 # minibatch related
 batch_type: folded
-batch_size: 72
+batch_size: 16
 valid_batch_type: folded
-valid_batch_size: 64 # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
+valid_batch_size: 16 # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
 
 # optimization
 max_epoch: 10
@@ -77,7 +77,7 @@ use_adapter: true
 adapter: lora
 save_strategy: required_grad_only
 adapter_conf:
-    rank: 96
-    alpha: 96
+    rank: 4
+    alpha: 4
     dropout_rate: 0.05
     target_modules: ["query", "key", "value", "attn.out", "mlp.0", "mlp.2"]
