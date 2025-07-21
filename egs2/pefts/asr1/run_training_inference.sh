@@ -63,6 +63,21 @@ set -o pipefail
 # ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en C1 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
 # ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en D1 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
 
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en C2 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en use_AESRC_tuned_tiny_model 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en use_AESRC_tuned_tiny_model_1 11 13 5 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en use_AESRC_tuned_tiny_model_2 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001 --optim_conf weight_decay=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en C3 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001 --decoder_conf use_adapterH=true --decoder_conf adapter_dim=256" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+
+# ./run_training_inference.sh "0to7-combined" AdapterH whisper small_en A1 10 13 5 0 "--model_conf trainable_target_name=adapter" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+# ./run_training_inference.sh "0to7-combined" AdapterH whisper small_en A2 11 13 5 0 "--model_conf trainable_target_name=adapter" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+
+# ./run_training_inference.sh "0to7-combined" AdapterH whisper small_en B1 11 13 5 1 "--model_conf trainable_target_name=adapter" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+# ./run_training_inference.sh "0to7-combined" AdapterH whisper small_en B2 11 13 5 1 "--model_conf trainable_target_name=adapter" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en C4 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+
 
 # select:
 # [CDSD-partA, CDSD-partB] from CDSD

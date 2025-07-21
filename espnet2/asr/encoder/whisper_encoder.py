@@ -7,7 +7,8 @@ from typeguard import typechecked
 
 from espnet2.asr.encoder.abs_encoder import AbsEncoder
 from espnet2.asr.specaug.specaug import SpecAug
-
+import torch.nn as nn
+import math
 
 class OpenAIWhisperEncoder(AbsEncoder):
     """Transformer-based Speech Encoder from OpenAI's Whisper Model:
@@ -26,6 +27,8 @@ class OpenAIWhisperEncoder(AbsEncoder):
         specaug_conf: Union[dict, None] = None,
         do_pad_trim: bool = False,
         return_layer_results=False,
+        use_adapterH=False,
+        adapter_dim=35,
     ):
         try:
             import whisper
@@ -52,7 +55,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
 
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu"
+            whisper_model, download_root=download_dir, device="cpu", use_adapterH=use_adapterH, adapter_dim=adapter_dim
         )
         self.encoders = copy.deepcopy(_model.encoder)
         self.encoders.train()

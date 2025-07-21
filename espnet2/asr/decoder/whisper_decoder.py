@@ -6,7 +6,8 @@ from typeguard import typechecked
 
 from espnet2.asr.decoder.abs_decoder import AbsDecoder
 from espnet.nets.scorer_interface import BatchScorerInterface
-
+import torch.nn as nn
+import math
 
 class ExpandedTokenEmbedding(torch.nn.Module):
     def __init__(self, ori_emebedding, additional_size):
@@ -56,6 +57,8 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         use_proxy_tuning=False,
         return_layer_results=False,
         use_decoder_fusion_module=False,
+        use_adapterH=False,
+        adapter_dim=35,
     ):
         try:
             import whisper
@@ -71,7 +74,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
 
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu", use_decoder_fusion_module=use_decoder_fusion_module
+            whisper_model, download_root=download_dir, device="cpu", use_decoder_fusion_module=use_decoder_fusion_module, use_adapterH=use_adapterH, adapter_dim=adapter_dim
         )
         self.decoders = copy.deepcopy(_model.decoder)
         attention_dim = self.decoders.token_embedding.embedding_dim

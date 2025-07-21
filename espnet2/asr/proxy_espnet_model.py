@@ -27,6 +27,7 @@ from espnet.nets.pytorch_backend.transformer.label_smoothing_loss import (  # no
 )
 import torch.nn as nn
 from torch import Tensor
+import math
 
 if V(torch.__version__) >= V("1.6.0"):
     from torch.cuda.amp import autocast
@@ -51,7 +52,7 @@ class Houlsby_Adapter(nn.Module):
         super(Houlsby_Adapter, self).__init__()
 
         self.houlsby_adapter = nn.Sequential(
-            LayerNorm(input_size),
+            # LayerNorm(input_size),
             nn.Linear(input_size, bottleneck),
             nn.GELU(),
             nn.Linear(bottleneck, output_size),
@@ -62,6 +63,35 @@ class Houlsby_Adapter(nn.Module):
         x=self.houlsby_adapter(x)
         return self.dropout(x)
 
+class SE_Adapter(nn.Module):
+    def __init__(
+        self,
+        input_size: int,
+        bottleneck: int,
+        output_size: int,
+    ):
+        super(SE_Adapter, self).__init__()
+
+        self.proj=nn.Sequential(
+            nn.Linear(input_size, output_size),
+            nn.GELU(),
+        )
+
+        self.se_adapter = nn.Sequential(
+            nn.Linear(output_size, bottleneck),
+            nn.GELU(),
+            nn.Linear(bottleneck, output_size),
+        )
+
+    def forward(self, x):
+        x=self.proj(x)
+        residual=x
+        seq_lengths = x.size(1)
+        x = x.mean(dim=1)
+        output = self.se_adapter(x)
+        output = output.sigmoid().unsqueeze(1)
+        output = output.repeat(1, seq_lengths, 1)
+        return output * residual
 
 class ProxyESPnetASRModel(AbsESPnetModel):
     """CTC-attention hybrid Encoder-Decoder model for proxy tuning"""
@@ -272,6 +302,10 @@ class ProxyESPnetASRModel(AbsESPnetModel):
 
         for p in self.houlsby_adapter.parameters():
             p.requires_grad=True
+        
+        for n, p in self.decoder.named_parameters():
+            if "adapter" in n:
+                p.requires_grad=True
 
     def forward(
         self,
