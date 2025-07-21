@@ -134,58 +134,96 @@ class OpenAIWhisperEncoder(AbsEncoder):
         ilens: torch.Tensor = None,
         prev_states=None,
     ) -> torch.Tensor:
-        x = F.gelu(self.encoders.conv1(input))
-        x = F.gelu(self.encoders.conv2(x))
-        x = x.permute(0, 2, 1)
+        if prev_states is None:
+            x = F.gelu(self.encoders.conv1(input))
+            x = F.gelu(self.encoders.conv2(x))
+            x = x.permute(0, 2, 1)
 
-        n_frames = x.size(1)
-        max_pos = self.encoders.positional_embedding.size(0)
-        if n_frames <= max_pos:
-            x = (x + self.encoders.positional_embedding[: x.size(1), :]).to(x.dtype)
-        else:
-            # due to positional encoding, audios >30 sec won't be accepted
-            x = x[:, :max_pos, :] + self.encoders.positional_embedding
-
-        x = self.dropout(x)
-
-        layer_results=[]
-        
-        for layer, block in enumerate(self.encoders.blocks):
-
-            if prev_states:
-                if layer >0 and layer < 3:
-                    x = block(
-                        (x+prev_states[layer-1])/2
-                        )
-                else:
-                    x=block(x)
+            n_frames = x.size(1)
+            max_pos = self.encoders.positional_embedding.size(0)
+            if n_frames <= max_pos:
+                x = (x + self.encoders.positional_embedding[: x.size(1), :]).to(x.dtype)
             else:
+                # due to positional encoding, audios >30 sec won't be accepted
+                x = x[:, :max_pos, :] + self.encoders.positional_embedding
+
+            x = self.dropout(x)
+
+            layer_results=[]
+            layer_results.append(x)
+            
+            for layer, block in enumerate(self.encoders.blocks):
+
                 x=block(x)
 
-            if layer < len(self.encoders.blocks) - 1:
-                x = self.dropout(x)
+                if layer < len(self.encoders.blocks) - 1:
+                    x = self.dropout(x)
 
-            if self.return_layer_results:
-                if layer in [0,8]:
-                    layer_results.append(x)
+                if self.return_layer_results:
+                    if layer in [2,5,8]:
+                        layer_results.append(x)
 
-        x = self.encoders.ln_post(x)
+            x = self.encoders.ln_post(x)
 
-        if ilens is not None:
-            olens = (
-                1
-                + (
-                    ilens
-                    - self.encoders.conv2.kernel_size[0]
-                    + 2 * self.encoders.conv2.padding[0]
+            if ilens is not None:
+                olens = (
+                    1
+                    + (
+                        ilens
+                        - self.encoders.conv2.kernel_size[0]
+                        + 2 * self.encoders.conv2.padding[0]
+                    )
+                    // self.encoders.conv2.stride[0]
                 )
-                // self.encoders.conv2.stride[0]
-            )
-            olens = torch.clamp(olens, max=max_pos)
-        else:
-            olens = None
+                olens = torch.clamp(olens, max=max_pos)
+            else:
+                olens = None
 
-        return x, olens, layer_results if self.return_layer_results else None
+            return x, olens, layer_results if self.return_layer_results else None
+        else:
+
+            # x = F.gelu(self.encoders.conv1(input))
+            # x = F.gelu(self.encoders.conv2(x))
+            # x = x.permute(0, 2, 1)
+            # n_frames = x.size(1)
+            # if n_frames <= max_pos:
+            #     x = (x + self.encoders.positional_embedding[: x.size(1), :]).to(x.dtype)
+            # else:
+            #     # due to positional encoding, audios >30 sec won't be accepted
+            #     x = x[:, :max_pos, :] + self.encoders.positional_embedding
+            # x = self.dropout(x)
+
+            max_pos = self.encoders.positional_embedding.size(0)
+            x=prev_states[0]
+
+            for layer, block in enumerate(self.encoders.blocks):
+                if layer==0:
+                    x=block(x)
+                else:
+                    x=block(
+                        (x+prev_states[layer])/2
+                    )
+
+                if layer < len(self.encoders.blocks) - 1:
+                    x = self.dropout(x)
+
+            x = self.encoders.ln_post(x)
+
+            if ilens is not None:
+                olens = (
+                    1
+                    + (
+                        ilens
+                        - self.encoders.conv2.kernel_size[0]
+                        + 2 * self.encoders.conv2.padding[0]
+                    )
+                    // self.encoders.conv2.stride[0]
+                )
+                olens = torch.clamp(olens, max=max_pos)
+            else:
+                olens = None
+
+            return x, olens, None
 
     def forward(
         self,

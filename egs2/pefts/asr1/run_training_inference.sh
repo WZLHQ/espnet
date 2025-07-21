@@ -78,6 +78,11 @@ set -o pipefail
 # ./run_training_inference.sh "0to7-combined" AdapterH whisper small_en B2 11 13 5 1 "--model_conf trainable_target_name=adapter" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
 # ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en C4 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
 
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en E1 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en E2 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en E3 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en E4 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
+
 
 # select:
 # [CDSD-partA, CDSD-partB] from CDSD

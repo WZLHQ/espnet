@@ -141,50 +141,63 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
                 if use_output_layer is True,
             olens: (batch, )
         """
-        tgt, memory = ys_in_pad, hs_pad
-        tgt = (
-            self.decoders.token_embedding(tgt)
-            + self.decoders.positional_embedding[: tgt.size(1)]
-        )
-        tgt = self.dropout(tgt)
+        if prev_states is None:
+            tgt, memory = ys_in_pad, hs_pad
+            tgt = (
+                self.decoders.token_embedding(tgt)
+                + self.decoders.positional_embedding[: tgt.size(1)]
+            )
+            tgt = self.dropout(tgt)
 
-        x = tgt.to(memory.dtype)
+            x = tgt.to(memory.dtype)
 
-        layer_results=[]
+            layer_results=[]
 
-        for layer, block in enumerate(self.decoders.blocks):
-            
-            if prev_states:
-                if layer >0 and layer < 3:
-                    x = block(
-                        (x+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1]))/2
-                        )
+            for layer, block in enumerate(self.decoders.blocks):
+                
+                x = block(x,memory,mask=self.decoders.mask)
+
+                if layer < len(self.decoders.blocks) - 1:
+                    x = self.dropout(x)
+
+                if self.return_layer_results:
+                    if layer in [2,5,8]:
+                        layer_results.append(x)
+
+            x = self.decoders.ln(x)
+            x = (
+                x @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
+            ).float()
+
+            return x, ys_in_lens, layer_results if self.return_layer_results else None
+        else:
+            tgt, memory = ys_in_pad, hs_pad
+            tgt = (
+                self.decoders.token_embedding(tgt)
+                + self.decoders.positional_embedding[: tgt.size(1)]
+            )
+            tgt = self.dropout(tgt)
+            x = tgt.to(memory.dtype)
+
+            for layer, block in enumerate(self.decoders.blocks):
+                if layer==0:
+                    x = block(x,memory,mask=self.decoders.mask)
                 else:
                     x = block(
-                        x,
+                        (x+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1]))/2,
                         memory,
                         mask=self.decoders.mask
                         )
-            else:
-                x = block(
-                    x,
-                    memory,
-                    mask=self.decoders.mask
-                    )
 
-            if layer < len(self.decoders.blocks) - 1:
-                x = self.dropout(x)
+                if layer < len(self.decoders.blocks) - 1:
+                    x = self.dropout(x)
 
-            if self.return_layer_results:
-                if layer in [0,8]:
-                    layer_results.append(x)
+            x = self.decoders.ln(x)
+            x = (
+                x @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
+            ).float()
 
-        x = self.decoders.ln(x)
-        x = (
-            x @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
-        ).float()
-
-        return x, ys_in_lens, layer_results if self.return_layer_results else None
+            return x, ys_in_lens, None
 
     def forward_one_step(
         self,

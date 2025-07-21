@@ -276,7 +276,7 @@ class ProxyESPnetASRModel(AbsESPnetModel):
         # note 768,128,384 is good for proxy tiny_en
         # note 768,256,384 is good for proxy base_en
         self.houlsby_adapter = nn.ModuleList(
-            [Houlsby_Adapter(768,128,384) for _ in [1,2]]
+            [Houlsby_Adapter(768,128,384) for _ in range(4)]
         )
 
         self.define_trainable_parameters(trainable_target_name)
