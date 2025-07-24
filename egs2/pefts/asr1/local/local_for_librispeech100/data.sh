@@ -57,6 +57,7 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
             local/local_for_librispeech100/data_prep.sh ${LIBRISPEECH}/LibriSpeech/${part} data/${data_sets}_${new_part_//-/_}
         else
             local/local_for_librispeech100/data_prep.sh ${LIBRISPEECH}/LibriSpeech/${part} data/Librispeech_${new_part_//-/_}
+        fi
     done
 fi
 

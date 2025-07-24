@@ -3,10 +3,12 @@
 . ./path.sh || exit 1;
 . ./cmd.sh || exit 1;
 
+cd $1
+unzip 200\ Hours\ -\ English\ Speech\ Data\ from\ 10\ Countries.zip
+mv 200\ Hours\ -\ English\ Speech\ Data\ from\ 10\ Countries Datatang-English
+
 raw_data=$1/Datatang-English/data
 
-# unzip and rename each accent
-# unzip $zipped_data -d ${2}
 mv $raw_data/American\ English\ Speech\ Data $raw_data/US
 mv $raw_data/British\ English\ Speech\ Data $raw_data/UK
 mv $raw_data/Chinese\ Speaking\ English\ Speech\ Data $raw_data/CHN

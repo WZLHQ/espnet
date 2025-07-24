@@ -16,8 +16,8 @@ set -o pipefail
 # TODO: Add Aishell1, Kespeech, Fleurs.
 corpus=Librispeech100
 
-# select from [whisper_multilingual, bpe, char]
-token_type=bpe
+# select from [whisper_multilingual, whisper_en, bpe, char]
+token_type=whisper_en
 
 if [[ "${corpus}" == *"CDSD"* ]]; then
     #--------------for CDSD-----------------#
@@ -32,10 +32,11 @@ if [[ "${corpus}" == *"CDSD"* ]]; then
 elif [[ "${corpus}" == *"AESRC"* ]]; then
     #--------------for AESRC-----------------#
     # $data_sets are selected from "US UK IND CHN JPN PT RU KR CA ES"
-    # corpus_path is "/autodl-fs/data/corora"
+    # corpus_path is "/root/shared-data/datasets/AESRC" for DL-Lab
     local_data_dir=local/local_for_AESRC_and_CDSD
-    data_sets="US UK IND CHN JPN PT RU KR CA ES"
-    corpus_path=/your/corora/path
+    # TODO 为什么传入多个就不行？？非得一个一个来？
+    data_sets="ES" # "US UK IND CHN JPN PT RU KR CA ES"
+    corpus_path=/root/shared-data/datasets/AESRC
     local_data_opts="--corpus ${corpus} --corpus_path ${corpus_path} --data_sets ${data_sets}"
     whisper_language=en
 

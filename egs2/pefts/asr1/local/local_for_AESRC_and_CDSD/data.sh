@@ -50,6 +50,7 @@ if [[ "${corpus}" == *"CDSD"* ]] || [[ "${corpus}" == *"AESRC"* ]]; then
                 fi
 
             elif [[ "${corpus}" == *"AESRC"* ]]; then
+                # local/local_for_AESRC_and_CDSD/download_and_untar.sh ${corpus_path} # only run for once
                 local/local_for_AESRC_and_CDSD/data_prep.sh ${corpus_path}/Datatang-English/data/${data_set} ${data} ${corpus}
             fi
 
