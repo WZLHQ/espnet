@@ -416,10 +416,14 @@ class Trainer:
                             }
                         else:
                             raise ValueError(f"Adapter type {adapter} not supported")
-                    else:  # save_strategy == "required_grad_only"
+                    else: # save_strategy == "required_grad_only"
                         for n, p in model.named_parameters():
                             if not p.requires_grad:
                                 model_state_dict.pop(n)
+                else: # save_strategy == "required_grad_only"
+                    for n, p in model.named_parameters():
+                        if not p.requires_grad:
+                            model_state_dict.pop(n)
 
                 torch.save(
                     {
