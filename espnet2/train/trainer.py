@@ -423,6 +423,12 @@ class Trainer:
                         for n, p in model.named_parameters():
                             if not p.requires_grad:
                                 model_state_dict.pop(n)
+                else:
+                    # save_strategy == "required_grad_only" for non-adapter tuning
+                    # including FT, ProxyTuning
+                    for n, p in model.named_parameters():
+                        if not p.requires_grad:
+                            model_state_dict.pop(n)
 
                 torch.save(
                     {

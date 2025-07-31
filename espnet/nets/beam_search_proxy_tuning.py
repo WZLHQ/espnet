@@ -49,6 +49,7 @@ class BeamSearch(torch.nn.Module):
         return_hs: bool = False,
         hyp_primer: List[int] = None,
         normalize_length: bool = False,
+        proxy_logits_weight=0.5,
     ):
         """Initialize beam search.
 
@@ -125,6 +126,7 @@ class BeamSearch(torch.nn.Module):
         )
         self.return_hs = return_hs
         self.normalize_length = normalize_length
+        self.proxy_logits_weight = proxy_logits_weight
 
     def set_hyp_primer(self, hyp_primer: List[int] = None) -> None:
         """Set the primer sequence for decoding.

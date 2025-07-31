@@ -59,6 +59,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         use_decoder_fusion_module=False,
         use_adapterH=False,
         adapter_dim=35,
+        proxy_logits_weight=0.5,
     ):
         try:
             import whisper
@@ -115,6 +116,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         
         self.use_proxy_tuning=use_proxy_tuning
         self.return_layer_results = return_layer_results
+        self.proxy_logits_weight = proxy_logits_weight
 
     def forward(
         self,
@@ -161,7 +163,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
                     x = self.dropout(x)
 
                 if self.return_layer_results:
-                    if layer in [2,5,8]:
+                    if layer in [0,8]:
                         layer_results.append(x)
 
             x = self.decoders.ln(x)
@@ -180,14 +182,15 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
             x = tgt.to(memory.dtype)
 
             for layer, block in enumerate(self.decoders.blocks):
-                if layer==0:
-                    x = block(x,memory,mask=self.decoders.mask)
-                else:
+                if layer >0 and layer <3:
                     x = block(
-                        (x+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1]))/2,
+                        # (x+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1]))/2,
+                        x*self.proxy_logits_weight+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1])*(1-self.proxy_logits_weight),
                         memory,
                         mask=self.decoders.mask
                         )
+                else:
+                    x = block(x,memory,mask=self.decoders.mask)
 
                 if layer < len(self.decoders.blocks) - 1:
                     x = self.dropout(x)
@@ -241,10 +244,91 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
             y @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
         ).float()
 
-        if not self.use_proxy_tuning:
-            y = torch.log_softmax(y, dim=-1)
-
+        y = torch.log_softmax(y, dim=-1)
         return y, None
+
+    def forward_one_step_for_proxy_tuning(
+        self,
+        tgt: torch.Tensor,
+        tgt_mask: torch.Tensor,
+        memory: torch.Tensor,
+        *,
+        cache: List[torch.Tensor] = None,
+        prev_states=None,
+    ) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+        """Forward one step.
+
+        Args:
+            tgt: input token ids, int64 (batch, maxlen_out)
+            tgt_mask: input token mask,  (batch, maxlen_out)
+                      dtype=torch.uint8 in PyTorch 1.2-
+                      dtype=torch.bool in PyTorch 1.2+ (include 1.2)
+            memory: encoded memory, float32  (batch, maxlen_in, feat)
+            cache: cached output list of (batch, max_time_out-1, size)
+        Returns:
+            y, cache: NN output value and cache per `self.decoders`.
+            y.shape` is (batch, maxlen_out, token)
+        NOTE (Shih-Lun):
+            cache implementation is ignored for now
+            for simplicity & correctness
+        """
+
+        if prev_states is None:
+            x = (
+                self.decoders.token_embedding(tgt)
+                + self.decoders.positional_embedding[: tgt.size(1)]
+            )
+            x = self.dropout(x)
+            x = x.to(memory.dtype)
+
+            layer_results=[]
+
+            for layer, block in enumerate(self.decoders.blocks):
+                x = block(x, memory, mask=self.decoders.mask)
+                if layer < len(self.decoders.blocks) - 1:
+                    x = self.dropout(x)
+
+                if self.return_layer_results:
+                    if layer in [0,8]:
+                        layer_results.append(x)
+
+            x = self.decoders.ln(x)
+            y = x[:, -1]
+            y = (
+                y @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
+            ).float()
+
+            return y, None, layer_results if self.return_layer_results else None
+        
+        else:
+            x = (
+                self.decoders.token_embedding(tgt)
+                + self.decoders.positional_embedding[: tgt.size(1)]
+            )
+            x = self.dropout(x)
+            x = x.to(memory.dtype)
+
+            for layer, block in enumerate(self.decoders.blocks):
+                if layer >0 and layer <3:
+                    x=block(
+                        # (x+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1]))/2,
+                        x*self.proxy_logits_weight+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1])*(1-self.proxy_logits_weight),
+                        memory,
+                        mask=self.decoders.mask
+                    )
+                else:
+                    x = block(x, memory, mask=self.decoders.mask)
+
+                if layer < len(self.decoders.blocks) - 1:
+                    x = self.dropout(x)
+
+            x = self.decoders.ln(x)
+            y = x[:, -1]
+            y = (
+                y @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
+            ).float()
+
+            return y, None, None
 
     def score(self, ys, state, x):
         """Score."""
@@ -275,3 +359,26 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
 
         # NOTE that logp is no more probability, but logits
         return logp, None
+
+    def batch_score_for_proxy_tuning(
+        self, ys: torch.Tensor, states: List[Any], xs: torch.Tensor, prev_states=None
+    ) -> Tuple[torch.Tensor, List[Any]]:
+        """Score new token batch.
+
+        Args:
+            ys (torch.Tensor): torch.int64 prefix tokens (n_batch, ylen).
+            states (List[Any]): Scorer states for prefix tokens.
+            xs (torch.Tensor):
+                The encoder feature that generates ys (n_batch, xlen, n_feat).
+
+        Returns:
+            tuple[torch.Tensor, List[Any]]: Tuple of
+                batchfied scores for next token with shape of `(n_batch, n_vocab)`
+                and next state list for ys.
+
+        """
+        # batch decoding, dummy mask is passed
+        logp, states, layer_results = self.forward_one_step_for_proxy_tuning(ys, torch.empty(0), xs, cache=None, prev_states=prev_states)
+
+        # NOTE that logp is no more probability, but logits
+        return logp, None, layer_results

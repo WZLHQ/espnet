@@ -68,7 +68,7 @@ log_interval: 50
 # Lirbispeech tuned tiny_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_tiny_en_ATT-MLP-tuned_on_Librispeech100.pth
 # Lirbispeech tuned base_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_base_en_ATT-MLP-tuned_on_Librispeech100.pth
 # AESRC tuned tiny_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/0to7-combined_whisper_FT_outputs/asr_FT_whisper-tiny_en_0to7-combined-B2/valid.acc.ave_3best.pth
-init_param: ["/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth", "/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/0to7-combined_whisper_FT_outputs/asr_FT_whisper-tiny_en_0to7-combined-B2/valid.acc.ave_3best.pth"]
+init_param: ["/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth", "/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_tiny_en_ATT-MLP-tuned_on_Librispeech100.pth"]
 
 # -------------hyper-paramters below might should be specified depend on specific corpus-----------------#
 

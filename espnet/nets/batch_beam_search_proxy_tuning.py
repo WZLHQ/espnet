@@ -186,6 +186,7 @@ class BatchBeamSearch(BeamSearch):
         scores = dict()
         states = dict()
         proxy_scores=dict()
+        layer_results=dict()
         for k, d in self.full_scorers.items():
             if "decoder" in k and self.return_hs:
                 raise NotImplementedError
@@ -197,16 +198,16 @@ class BatchBeamSearch(BeamSearch):
                 scores[k], states[k] = d.batch_score(hyp.yseq, hyp.states[k], x, pre_x)
             else:
                 # forward this branch
-                # NOTE that "scores" denotes logits now since we modify the batch_score()
-                scores[k], states[k] = d.batch_score(hyp.yseq, hyp.states[k], x)
+                # NOTE that "scores" denotes logits
+                scores[k], states[k], layer_results["decoder"] = d.batch_score_for_proxy_tuning(hyp.yseq, hyp.states[k], x)
 
         # average fusion for both logits
-        # NOTE that "proxy_scores" denotes logits now since we modify the batch_score()
-        proxy_scores["proxy_decoder"],_= self.proxy_scorers["proxy_decoder"].batch_score(hyp.yseq, None, p_x)
+        # NOTE that "proxy_scores" denotes logits
+        proxy_scores["proxy_decoder"], _, _= self.proxy_scorers["proxy_decoder"].batch_score_for_proxy_tuning(hyp.yseq, None, p_x, layer_results["decoder"])
 
         for k,v in scores.items():
             if "decoder" in k:
-                avg_logits=(v+proxy_scores["proxy_decoder"])/2
+                avg_logits=proxy_scores["proxy_decoder"]*self.proxy_logits_weight+v*(1-self.proxy_logits_weight)
                 # NOTE that NOW the "scores" denotes scores (i.e., log probabilities)
                 scores[k]=torch.log_softmax(avg_logits, dim=-1)
                 

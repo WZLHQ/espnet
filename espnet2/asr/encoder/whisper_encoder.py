@@ -29,6 +29,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
         return_layer_results=False,
         use_adapterH=False,
         adapter_dim=35,
+        proxy_logits_weight=0.5,
     ):
         try:
             import whisper
@@ -70,6 +71,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
         self.do_pad_trim = do_pad_trim
         self.pad_samples = N_SAMPLES
         self.return_layer_results = return_layer_results
+        self.proxy_logits_weight = proxy_logits_weight
 
     def output_size(self) -> int:
         return self.encoders.ln_post.normalized_shape[-1]
@@ -150,7 +152,6 @@ class OpenAIWhisperEncoder(AbsEncoder):
             x = self.dropout(x)
 
             layer_results=[]
-            layer_results.append(x)
             
             for layer, block in enumerate(self.encoders.blocks):
 
@@ -160,7 +161,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
                     x = self.dropout(x)
 
                 if self.return_layer_results:
-                    if layer in [2,5,8]:
+                    if layer in [0,8]:
                         layer_results.append(x)
 
             x = self.encoders.ln_post(x)
@@ -180,29 +181,28 @@ class OpenAIWhisperEncoder(AbsEncoder):
                 olens = None
 
             return x, olens, layer_results if self.return_layer_results else None
+        
         else:
-
-            # x = F.gelu(self.encoders.conv1(input))
-            # x = F.gelu(self.encoders.conv2(x))
-            # x = x.permute(0, 2, 1)
-            # n_frames = x.size(1)
-            # if n_frames <= max_pos:
-            #     x = (x + self.encoders.positional_embedding[: x.size(1), :]).to(x.dtype)
-            # else:
-            #     # due to positional encoding, audios >30 sec won't be accepted
-            #     x = x[:, :max_pos, :] + self.encoders.positional_embedding
-            # x = self.dropout(x)
-
+            x = F.gelu(self.encoders.conv1(input))
+            x = F.gelu(self.encoders.conv2(x))
+            x = x.permute(0, 2, 1)
+            n_frames = x.size(1)
             max_pos = self.encoders.positional_embedding.size(0)
-            x=prev_states[0]
+            if n_frames <= max_pos:
+                x = (x + self.encoders.positional_embedding[: x.size(1), :]).to(x.dtype)
+            else:
+                # due to positional encoding, audios >30 sec won't be accepted
+                x = x[:, :max_pos, :] + self.encoders.positional_embedding
+            x = self.dropout(x)
 
             for layer, block in enumerate(self.encoders.blocks):
-                if layer==0:
-                    x=block(x)
-                else:
+                if layer >0 and layer <3:
                     x=block(
-                        (x+prev_states[layer])/2
+                        # (x+prev_states[layer-1])/2
+                        x*self.proxy_logits_weight+prev_states[layer-1]*(1-self.proxy_logits_weight)
                     )
+                else:
+                    x=block(x)
 
                 if layer < len(self.encoders.blocks) - 1:
                     x = self.dropout(x)

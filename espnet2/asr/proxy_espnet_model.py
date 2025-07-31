@@ -52,7 +52,6 @@ class Houlsby_Adapter(nn.Module):
         super(Houlsby_Adapter, self).__init__()
 
         self.houlsby_adapter = nn.Sequential(
-            # LayerNorm(input_size),
             nn.Linear(input_size, bottleneck),
             nn.GELU(),
             nn.Linear(bottleneck, output_size),
@@ -62,36 +61,6 @@ class Houlsby_Adapter(nn.Module):
     def forward(self, x):
         x=self.houlsby_adapter(x)
         return self.dropout(x)
-
-class SE_Adapter(nn.Module):
-    def __init__(
-        self,
-        input_size: int,
-        bottleneck: int,
-        output_size: int,
-    ):
-        super(SE_Adapter, self).__init__()
-
-        self.proj=nn.Sequential(
-            nn.Linear(input_size, output_size),
-            nn.GELU(),
-        )
-
-        self.se_adapter = nn.Sequential(
-            nn.Linear(output_size, bottleneck),
-            nn.GELU(),
-            nn.Linear(bottleneck, output_size),
-        )
-
-    def forward(self, x):
-        x=self.proj(x)
-        residual=x
-        seq_lengths = x.size(1)
-        x = x.mean(dim=1)
-        output = self.se_adapter(x)
-        output = output.sigmoid().unsqueeze(1)
-        output = output.repeat(1, seq_lengths, 1)
-        return output * residual
 
 class ProxyESPnetASRModel(AbsESPnetModel):
     """CTC-attention hybrid Encoder-Decoder model for proxy tuning"""
@@ -276,7 +245,7 @@ class ProxyESPnetASRModel(AbsESPnetModel):
         # note 768,128,384 is good for proxy tiny_en
         # note 768,256,384 is good for proxy base_en
         self.houlsby_adapter = nn.ModuleList(
-            [Houlsby_Adapter(768,128,384) for _ in range(4)]
+            [Houlsby_Adapter(768,128,384) for _ in range(2)]
         )
 
         self.define_trainable_parameters(trainable_target_name)
