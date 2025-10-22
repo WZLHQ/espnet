@@ -37,10 +37,6 @@ else:
     def autocast(enabled=True):
         yield
 
-class LayerNorm(nn.LayerNorm):
-    def forward(self, x: Tensor) -> Tensor:
-        return super().forward(x.float()).type(x.dtype)
-
 class Houlsby_Adapter(nn.Module):
     def __init__(
         self,
@@ -242,11 +238,7 @@ class ProxyESPnetASRModel(AbsESPnetModel):
         else:
             self.lang_token_id = None
 
-        # note 768,128,384 is good for proxy tiny_en
-        # note 768,256,384 is good for proxy base_en
-        self.houlsby_adapter = nn.ModuleList(
-            [Houlsby_Adapter(768,128,384) for _ in range(2)]
-        )
+        self.houlsby_adapter = Houlsby_Adapter(768,128,384)
 
         self.define_trainable_parameters(trainable_target_name)
 
@@ -476,7 +468,7 @@ class ProxyESPnetASRModel(AbsESPnetModel):
         encoder_out, encoder_out_lens, layer_results, _ = self.encoder(feats, feats_lengths)
 
         # project the dimension of layer_results to desired one
-        layer_results=[self.houlsby_adapter[id](layer_result) for id, layer_result in enumerate(layer_results)]
+        layer_results=self.houlsby_adapter( torch.stack(layer_results,dim=-2) )
 
         # forward proxy encoder
         proxy_encoder_out, proxy_encoder_out_lens, _, _ = self.proxy_encoder(feats, feats_lengths, layer_results)
@@ -635,12 +627,6 @@ class ProxyESPnetASRModel(AbsESPnetModel):
 
         # average fusion for decoder_out and proxy_decoder_out
         decoder_out = proxy_decoder_out*self.proxy_logits_weight + decoder_out*(1-self.proxy_logits_weight)
-
-        # fusion_weight=self.linear_decay_weight()
-        # decoder_out = proxy_decoder_out*fusion_weight + decoder_out*(1-fusion_weight)
-
-        # add fusion for both decoder_out and proxy_decoder_out
-        # decoder_out = proxy_decoder_out + decoder_out
 
         # 2. Compute attention loss
         loss_att = self.criterion_att(decoder_out, ys_out_pad)

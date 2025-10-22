@@ -59,7 +59,9 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         use_decoder_fusion_module=False,
         use_adapterH=False,
         adapter_dim=35,
+        n_layer=None,
         proxy_logits_weight=0.5,
+        fusion_type="sim_fusion", # [sim_fusion, average]
     ):
         try:
             import whisper
@@ -75,7 +77,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
 
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu", use_decoder_fusion_module=use_decoder_fusion_module, use_adapterH=use_adapterH, adapter_dim=adapter_dim
+            whisper_model, download_root=download_dir, device="cpu", use_decoder_fusion_module=use_decoder_fusion_module, use_adapterH=use_adapterH, adapter_dim=adapter_dim, n_layer=n_layer
         )
         self.decoders = copy.deepcopy(_model.decoder)
         attention_dim = self.decoders.token_embedding.embedding_dim
@@ -117,6 +119,27 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         self.use_proxy_tuning=use_proxy_tuning
         self.return_layer_results = return_layer_results
         self.proxy_logits_weight = proxy_logits_weight
+        self.n_layer=n_layer
+        self.fusion_type=fusion_type
+
+    def similarity_fusion(self, x_smal, x_large):
+        '''
+        x_smal: (batch, time, d_k)
+        x_large: (batch, time, 4, d_k)
+        '''
+
+        # query --> (batch, time, d_k). It equals x_smal
+        # key / value --> (batch, time, N+1, d_k)
+        k_v=torch.cat([x_smal.unsqueeze(2),x_large], dim=2)
+
+        # scores --> (batch, time, 1, N+1)
+        scores = torch.matmul(x_smal.unsqueeze(2), k_v.transpose(-2, -1)) / math.sqrt(x_smal.size(-1))
+        # att_map --> (batch, time, 1, N+1)
+        att_map = torch.softmax(scores, dim=-1)
+        # q @ K.T @ v
+        x = torch.matmul(att_map, k_v).squeeze(dim=-2)
+
+        return x
 
     def forward(
         self,
@@ -171,7 +194,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
                 x @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
             ).float()
 
-            return x, ys_in_lens, layer_results if self.return_layer_results else None
+            return x, ys_in_lens, torch.stack(layer_results,dim=-2) if self.return_layer_results else None
         else:
             tgt, memory = ys_in_pad, hs_pad
             tgt = (
@@ -182,10 +205,10 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
             x = tgt.to(memory.dtype)
 
             for layer, block in enumerate(self.decoders.blocks):
-                if layer >0 and layer <3:
+
+                if layer>0 and layer<3:
                     x = block(
-                        # (x+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1]))/2,
-                        x*self.proxy_logits_weight+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1])*(1-self.proxy_logits_weight),
+                        self.similarity_fusion( x,self.decoders.decoder_fusion_module(prev_states[:,:,layer-1:layer,:]) ) if self.fusion_type=="sim_fusion" else x*self.proxy_logits_weight+self.decoders.decoder_fusion_module(prev_states[:,:,layer-1,:])*(1-self.proxy_logits_weight),
                         memory,
                         mask=self.decoders.mask
                         )
@@ -298,7 +321,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
                 y @ torch.transpose(self.decoders.token_embedding.weight.to(x.dtype), 0, 1)
             ).float()
 
-            return y, None, layer_results if self.return_layer_results else None
+            return y, None, torch.stack(layer_results,dim=-2) if self.return_layer_results else None
         
         else:
             x = (
@@ -309,15 +332,14 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
             x = x.to(memory.dtype)
 
             for layer, block in enumerate(self.decoders.blocks):
-                if layer >0 and layer <3:
-                    x=block(
-                        # (x+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1]))/2,
-                        x*self.proxy_logits_weight+self.decoders.decoder_fusion_module[layer-1](prev_states[layer-1])*(1-self.proxy_logits_weight),
+                if layer>0 and layer<3:
+                    x = block(
+                        self.similarity_fusion( x,self.decoders.decoder_fusion_module(prev_states[:,:,layer-1:layer,:]) ) if self.fusion_type=="sim_fusion" else x*self.proxy_logits_weight+self.decoders.decoder_fusion_module(prev_states[:,:,layer-1,:])*(1-self.proxy_logits_weight),
                         memory,
                         mask=self.decoders.mask
-                    )
+                        )
                 else:
-                    x = block(x, memory, mask=self.decoders.mask)
+                    x = block(x,memory,mask=self.decoders.mask)
 
                 if layer < len(self.decoders.blocks) - 1:
                     x = self.dropout(x)

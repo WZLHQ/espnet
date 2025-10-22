@@ -97,10 +97,31 @@ def load_pretrained_model(
 
         obj = get_attr(model, dst_key)
 
+    dst_state = obj.state_dict()
     src_state = torch.load(path, map_location=map_location)
+
     if id==1:
+        # add "proxy_"
         src_state={k.replace("encoder.", "proxy_encoder."): v for k, v in src_state.items()}
         src_state={k.replace("decoder.", "proxy_decoder."): v for k, v in src_state.items()}
+
+        # # remove non-blocks
+        # src_state={k: v for k, v in src_state.items() if "blocks" in k}
+        # # do layer soup
+        # block_groups=[["blocks.0.","blocks.1.","blocks.2."],["blocks.3.","blocks.4.","blocks.5."],["blocks.6.","blocks.7.","blocks.8."],["blocks.9.","blocks.10.","blocks.11."]]
+        # target_names=["blocks.0.","blocks.1.","blocks.2.","blocks.3."]
+        # uniform_soup={}
+        # for block_group, target_name in zip(block_groups,target_names):
+        #     num=len(block_group)
+        #     for id, block_name in enumerate(block_group):
+        #         block_state={k.replace(block_name, target_name): v for k, v in src_state.items() if block_name in k}
+        #         if id == 0:
+        #             for k, v in block_state.items():
+        #                 uniform_soup[k]=v * (1./num)
+        #         else:
+        #             for k, v in block_state.items():
+        #                 uniform_soup[k]=v * (1./num)+uniform_soup[k]
+        # src_state=uniform_soup
 
     if excludes is not None:
         for e in excludes.split(","):
@@ -113,7 +134,6 @@ def load_pretrained_model(
             if k.startswith(src_key)
         }
 
-    dst_state = obj.state_dict()
     if ignore_init_mismatch:
         src_state = filter_state_dict(dst_state, src_state)
     dst_state.update(src_state)

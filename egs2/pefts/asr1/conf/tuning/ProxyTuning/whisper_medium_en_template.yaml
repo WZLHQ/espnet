@@ -1,13 +1,13 @@
 encoder: whisper
 encoder_conf:
-    whisper_model: small.en
+    whisper_model: medium.en
     dropout_rate: 0.0
     return_layer_results: true
     # do_pad_trim: true         # should be set when doing zero-shot inference
 
 decoder: whisper
 decoder_conf:
-    whisper_model: small.en
+    whisper_model: medium.en
     dropout_rate: 0.0
     use_proxy_tuning: true
     return_layer_results: false
@@ -68,12 +68,11 @@ accum_grad: 1
 patience: 3
 log_interval: 50
 
-# Lirbispeech tuned small_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth
+# Lirbispeech tuned medium_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_medium_en_ATT-MLP-tuned_on_Librispeech100.pth
 # Lirbispeech tuned tiny_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_tiny_en_ATT-MLP-tuned_on_Librispeech100.pth
 # Lirbispeech tuned base_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_base_en_ATT-MLP-tuned_on_Librispeech100.pth
 # AESRC tuned tiny_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/0to7-combined_whisper_FT_outputs/asr_FT_whisper-tiny_en_0to7-combined-B2/valid.acc.ave_3best.pth
-# AESRC last_decoder_adapter_tuned Lirbispeech_tuned_small_en: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/0to7-combined_whisper_AdapterH_outputs/asr_AdapterH_whisper-small_en_0to7-combined-A1/valid.acc.ave_3best.pth
-init_param: ["/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth", "/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_tiny_en_ATT-MLP-tuned_on_Librispeech100.pth"]
+init_param: ["/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_medium_en_ATT-MLP-tuned_on_Librispeech100.pth", "/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_tiny_en_ATT-MLP-tuned_on_Librispeech100.pth"]
 
 # -------------hyper-paramters below might should be specified depend on specific corpus-----------------#
 
@@ -87,7 +86,7 @@ valid_batch_size: 64 # large valid_batch_bins lead to large GPU memory, we can s
 max_epoch: 10
 optim: adamw
 optim_conf:
-    lr: 2.0e-05
+    lr: 1.0e-04
     weight_decay: 0.01
     betas:
     - 0.9

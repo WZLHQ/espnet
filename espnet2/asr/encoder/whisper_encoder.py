@@ -29,7 +29,9 @@ class OpenAIWhisperEncoder(AbsEncoder):
         return_layer_results=False,
         use_adapterH=False,
         adapter_dim=35,
+        n_layer=None,
         proxy_logits_weight=0.5,
+        fusion_type="sim_fusion", # [sim_fusion, average]
     ):
         try:
             import whisper
@@ -48,7 +50,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
         self.win_length = N_FFT
         self.hop_length = HOP_LENGTH
         self.n_mels = N_MELS
-
+        self.n_layer=n_layer
         self.mel_filters = whisper.audio.mel_filters
 
         # note that originally Whisper doesn't use dropouts
@@ -56,7 +58,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
 
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu", use_adapterH=use_adapterH, adapter_dim=adapter_dim
+            whisper_model, download_root=download_dir, device="cpu", use_adapterH=use_adapterH, adapter_dim=adapter_dim, n_layer=n_layer
         )
         self.encoders = copy.deepcopy(_model.encoder)
         self.encoders.train()
@@ -72,6 +74,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
         self.pad_samples = N_SAMPLES
         self.return_layer_results = return_layer_results
         self.proxy_logits_weight = proxy_logits_weight
+        self.fusion_type=fusion_type
 
     def output_size(self) -> int:
         return self.encoders.ln_post.normalized_shape[-1]
@@ -129,6 +132,25 @@ class OpenAIWhisperEncoder(AbsEncoder):
         log_spec = (log_spec + 4.0) / 4.0
 
         return log_spec, olens
+
+    def similarity_fusion(self, x_smal, x_large):
+        '''
+        x_smal: (batch, time, d_k)
+        x_large: (batch, time, 4, d_k)
+        '''
+
+        # query --> (batch, time, d_k). It equals x_smal
+        # key / value --> (batch, time, N+1, d_k)
+        k_v=torch.cat([x_smal.unsqueeze(2),x_large], dim=2)
+
+        # scores --> (batch, time, 1, N+1)
+        scores = torch.matmul(x_smal.unsqueeze(2), k_v.transpose(-2, -1)) / math.sqrt(x_smal.size(-1))
+        # att_map --> (batch, time, 1, N+1)
+        att_map = torch.softmax(scores, dim=-1)
+        # q @ K.T @ v
+        x = torch.matmul(att_map, k_v).squeeze(dim=-2)
+
+        return x
 
     def whisper_encode(
         self,
@@ -196,10 +218,9 @@ class OpenAIWhisperEncoder(AbsEncoder):
             x = self.dropout(x)
 
             for layer, block in enumerate(self.encoders.blocks):
-                if layer >0 and layer <3:
+                if layer>0 and layer<3:
                     x=block(
-                        # (x+prev_states[layer-1])/2
-                        x*self.proxy_logits_weight+prev_states[layer-1]*(1-self.proxy_logits_weight)
+                        self.similarity_fusion(x,prev_states[:,:,layer-1:layer,:]) if self.fusion_type=="sim_fusion" else x*self.proxy_logits_weight+prev_states[:,:,layer-1,:]*(1-self.proxy_logits_weight)
                     )
                 else:
                     x=block(x)

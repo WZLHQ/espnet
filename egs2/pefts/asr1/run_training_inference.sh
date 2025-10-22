@@ -5,92 +5,6 @@ set -e
 set -u
 set -o pipefail
 
-
-#----------------------------run logs-------------------------------#
-# ./run_training_inference.sh "CHN" FT whisper small_en A1 10 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth --optim_conf lr=0.00001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "CHN" LoRA whisper small_en A1 10 13 6 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en A1 12 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en A2 11 13 6 1 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en A3 11 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth --scheduler_conf warmup_steps=500" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en B1 11 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "Librispeech100" FT whisper tiny_en A1 12 13 6 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning "0to7-combined_valid 0to7-combined_test"
-
-# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en C1 11 13 6 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en C2 11 13 6 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.000005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "CHN" FT whisper tiny_en A1 10 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-tiny_en_Librispeech100-A1/valid.acc.ave_3best.pth --optim_conf lr=0.00001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "CHN" FT whisper tiny_en A2 11 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-tiny_en_Librispeech100-A1/valid.acc.ave_3best.pth --optim_conf lr=0.00002" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "CHN" FT whisper tiny_en A3 11 13 6 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-tiny_en_Librispeech100-A1/valid.acc.ave_3best.pth --optim_conf lr=0.000005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en D1 12 13 6 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en E1 12 13 6 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "CHN" ProxyTuning whisper small_en E2 11 13 6 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "CHN" FT whisper largeV2 A1 11 13 6 0 "" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "CHN" ProxyTuning whisper largeV2 A1 12 13 1 0 "" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "CHN" LoRA whisper largeV2 A1 12 13 1 1 "" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en A1 11 13 5 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en A2 11 13 5 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en A1-1 11 13 5 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en A1-2 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" FT whisper tiny_en B1 10 13 5 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-tiny_en_Librispeech100-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" FT whisper tiny_en B2 10 13 5 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-tiny_en_Librispeech100-A1/valid.acc.ave_3best.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en B1 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en B2 11 13 5 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "Librispeech100" FT whisper base_en A1 11 13 6 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning "Librispeech100_valid_clean Librispeech100_test_clean 0to7-combined_valid 0to7-combined_test"
-# ./run_training_inference.sh "Librispeech100" FT whisper base_en A2 11 13 6 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning "Librispeech100_valid_clean Librispeech100_test_clean 0to7-combined_valid 0to7-combined_test"
-# ./run_training_inference.sh "Librispeech100" FT whisper base_en A3 11 13 6 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.00001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning "Librispeech100_valid_clean Librispeech100_test_clean 0to7-combined_valid 0to7-combined_test"
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en Y1 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_small_en_ATT-MLP-tuned_on_Librispeech100.pth --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en Y2 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en Y3 11 13 5 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en Y4 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" FT whisper base_en B1 11 13 5 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_base_en_ATT-MLP-tuned_on_Librispeech100.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" FT whisper base_en B2 11 13 5 0 "--init_param /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/tuned_whisper/whisper_base_en_ATT-MLP-tuned_on_Librispeech100.pth --model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en C1 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en C2 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en use_AESRC_tuned_tiny_model 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en use_AESRC_tuned_tiny_model_1 11 13 5 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en use_AESRC_tuned_tiny_model_2 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001 --optim_conf weight_decay=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en C3 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001 --decoder_conf use_adapterH=true --decoder_conf adapter_dim=256" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" AdapterH whisper small_en A1 10 13 5 0 "--model_conf trainable_target_name=adapter" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" AdapterH whisper small_en A2 11 13 5 0 "--model_conf trainable_target_name=adapter" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" AdapterH whisper small_en B1 11 13 5 1 "--model_conf trainable_target_name=adapter" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" AdapterH whisper small_en B2 11 13 5 1 "--model_conf trainable_target_name=adapter" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en C4 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en E1 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en E2 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en E3 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en E4 11 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en D2 12 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en D1 12 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.00005" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en D3 12 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001 --optim_conf weight_decay=0.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en D4 12 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001 --optim_conf weight_decay=1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en F1 12 13 5 1 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --model_conf proxy_logits_weight=1 --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001 --optim_conf weight_decay=0.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en D5 12 13 5 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --model_conf proxy_logits_weight=0.3 --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001 --optim_conf weight_decay=0.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-# ./run_training_inference.sh "0to7-combined" ProxyTuning whisper small_en D6 11 13 5 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight,decoder_fusion_module --model_conf proxy_logits_weight=0.7 --decoder_conf return_layer_results=true --proxy_decoder_conf use_decoder_fusion_module=true --optim_conf lr=0.0001 --optim_conf weight_decay=0.1" /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_ProxyTuning ""
-
-
 # select:
 # [CDSD-partA, CDSD-partB] from CDSD
 # [Librilight10, Librispeech100]
@@ -285,6 +199,7 @@ do
         --asr_text_fold_length 150 \
         --lm_fold_length 150 \
         --lm_train_text "data/${train_set}/text" \
+        --ignore_init_mismatch true \
         # "$@"
   done
 done
