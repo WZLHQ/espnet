@@ -1,12 +1,12 @@
 encoder: whisper
 encoder_conf:
-    whisper_model: small.en
+    whisper_model: base.en
     dropout_rate: 0.0
     # do_pad_trim: true         # should be set when doing zero-shot inference
 
 decoder: whisper
 decoder_conf:
-    whisper_model: small.en
+    whisper_model: base.en
     dropout_rate: 0.0
 
 model_conf:
@@ -48,7 +48,7 @@ cudnn_benchmark: false
 accum_grad: 1
 patience: 3
 log_interval: 50
-init_param: []
+init_param: ["/root/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-base_en_Librispeech100-A2/valid.acc.ave_3best.pth"]
 
 # -------------hyper-paramters below might should be specified depend on specific corpus-----------------#
 
@@ -62,7 +62,7 @@ valid_batch_size: 64 # large valid_batch_bins lead to large GPU memory, we can s
 max_epoch: 10
 optim: adamw
 optim_conf:
-    lr: 2.0e-05
+    lr: 5.0e-05
     weight_decay: 0.01
     betas:
     - 0.9

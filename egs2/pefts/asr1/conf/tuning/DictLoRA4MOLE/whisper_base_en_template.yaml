@@ -1,12 +1,12 @@
 encoder: whisper
 encoder_conf:
-    whisper_model: small.en
+    whisper_model: base.en
     dropout_rate: 0.0
     # do_pad_trim: true         # should be set when doing zero-shot inference
 
 decoder: whisper
 decoder_conf:
-    whisper_model: small.en
+    whisper_model: base.en
     dropout_rate: 0.0
 
 model_conf:
@@ -16,7 +16,6 @@ model_conf:
     extract_feats_in_collect_stats: false
     sym_sos: "<|startoftranscript|>"
     sym_eos: "<|endoftext|>"
-    temperature: 1
 
 # model selection
 best_model_criterion:
@@ -48,7 +47,7 @@ cudnn_benchmark: false
 accum_grad: 1
 patience: 3
 log_interval: 50
-init_param: []
+init_param: ["/root/espnet/egs2/pefts/asr1/espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-base_en_Librispeech100-A2/valid.acc.ave_3best.pth"]
 
 # -------------hyper-paramters below might should be specified depend on specific corpus-----------------#
 
@@ -62,7 +61,7 @@ valid_batch_size: 64 # large valid_batch_bins lead to large GPU memory, we can s
 max_epoch: 10
 optim: adamw
 optim_conf:
-    lr: 2.0e-05
+    lr: 5.0e-4
     weight_decay: 0.01
     betas:
     - 0.9
@@ -70,4 +69,18 @@ optim_conf:
     eps: 1.0e-06
 scheduler: warmuplr
 scheduler_conf:
-    warmup_steps: 1500
+    warmup_steps: 500
+
+# LoRA finetune related
+use_adapter: true
+adapter: dictlora4mole
+save_strategy: required_grad_only
+adapter_conf:
+    expert_path: "espnet_outputs/{}_whisper_DictLoRA_outputs/asr_DictLoRA_whisper-{}_en_{}-A1/valid.acc.ave_3best.pth" # you can specify the expert path in run.sh
+    domain: null # should be specified in the run.sh
+    Nbest: 3best # select from [1best, 3best, 5best, 7best], e.g., "5best" denotes using Top-5 experts
+    rank: 32 # we assume that the rank of each expert are equal by default.
+    dropout_rate: 0.05
+    target_modules: ["query", "key", "value", "attn.out", "mlp.0", "mlp.2"]
+    key_name_list: null # this will be filled automactically
+    initial_type: ones

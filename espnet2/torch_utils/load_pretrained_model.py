@@ -40,7 +40,13 @@ def load_pretrained_model(
     init_param: str,
     model: torch.nn.Module,
     ignore_init_mismatch: bool,
+    id,
     map_location: str = "cpu",
+    # following args (including "id") only sever for E-CAM
+    adapter_type=None,
+    num_models=1,
+    src_experts_key_name=None,
+    uniform_soup=None,
 ):
     """Load a model state and set it to the model.
 
@@ -97,6 +103,28 @@ def load_pretrained_model(
         obj = get_attr(model, dst_key)
 
     src_state = torch.load(path, map_location=map_location)
+
+
+    if adapter_type=="dictlora4ecam":
+        if id != 0:
+            # rename the src key
+            src_state = {k.split("lora_A")[0]+"lora_A."+src_experts_key_name if "lora_A" in k else k : v for k, v in src_state.items()}
+            src_state = {k.split("lora_B")[0]+"lora_B."+src_experts_key_name if "lora_B" in k else k : v for k, v in src_state.items()}
+
+        if id == 1:
+            uniform_soup = {k : v * (1./num_models) for k, v in src_state.items()}
+            if id!=num_models:
+                return uniform_soup
+            else:
+                src_state=uniform_soup
+        elif id > 1:
+            uniform_soup = {k : v * (1./num_models) + uniform_soup[k] for k, v in src_state.items()}
+            if id!=num_models:
+                return uniform_soup
+            else:
+                src_state=uniform_soup
+
+
     if excludes is not None:
         for e in excludes.split(","):
             src_state = {k: v for k, v in src_state.items() if not k.startswith(e)}
@@ -113,3 +141,5 @@ def load_pretrained_model(
         src_state = filter_state_dict(dst_state, src_state)
     dst_state.update(src_state)
     obj.load_state_dict(dst_state)
+
+    return None

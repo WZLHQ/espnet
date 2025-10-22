@@ -71,6 +71,7 @@ class ESPnetASRModel(AbsESPnetModel):
         temperature=1,
         extract_feats_in_collect_stats: bool = True,
         lang_token_id: int = -1,
+        trainable_target_name=None,
     ):
         assert 0.0 <= ctc_weight <= 1.0, ctc_weight
         assert 0.0 <= interctc_weight < 1.0, interctc_weight
@@ -211,6 +212,17 @@ class ESPnetASRModel(AbsESPnetModel):
             self.lang_token_id = torch.tensor([[lang_token_id]])
         else:
             self.lang_token_id = None
+
+        if trainable_target_name:
+            trainable_target_name=trainable_target_name.split(",")
+            for p in self.parameters():
+                p.requires_grad=False
+            for n, p in encoder.named_parameters():
+                if any(t in n for t in trainable_target_name):
+                    p.requires_grad=True
+            for n, p in decoder.named_parameters():
+                if any(t in n for t in trainable_target_name):
+                    p.requires_grad=True
 
     def forward(
         self,

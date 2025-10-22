@@ -8,6 +8,8 @@ from typeguard import typechecked
 from espnet2.asr.encoder.abs_encoder import AbsEncoder
 from espnet2.asr.specaug.specaug import SpecAug
 
+# we add this because of a issue decribed at https://github.com/pytorch/pytorch/issues/119420
+torch.backends.cuda.cufft_plan_cache[0].max_size = 0
 
 class OpenAIWhisperEncoder(AbsEncoder):
     """Transformer-based Speech Encoder from OpenAI's Whisper Model:

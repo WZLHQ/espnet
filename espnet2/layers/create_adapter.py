@@ -11,10 +11,36 @@ References:
 import torch
 from typeguard import typechecked
 
-from espnet2.layers.create_adapter_fn import create_houlsby_adapter, create_lora_adapter, create_moslora_adapter, create_melora_adapter, create_lora_houslby_adapter
+from espnet2.layers.create_adapter_fn import create_houlsby_adapter, \
+                                             create_lora_adapter, \
+                                             create_vera_adapter, \
+                                             create_dict_lora_adapter, \
+                                             create_dict_lora4lanfusion_adapter, \
+                                             create_dict_lora4velora_adapter, \
+                                             create_dict_lora4fastervelora_adapter, \
+                                             create_dict_lora4cat_adapter, \
+                                             create_dict_lora4ecam_adapter, \
+                                             create_dict_lora4pcam_adapter, \
+                                             create_dict_lora4mole_adapter, \
+                                             create_dict_lora4samd_adapter, \
+                                             create_moslora_adapter, \
+                                             create_melora_adapter, \
+                                             create_lora_houslby_adapter
 
 create_adapter_fn_table = {
+
+    "dictlora": create_dict_lora_adapter, # create LoRA weight using ParameterDict
+    "dictlora4lanfusion": create_dict_lora4lanfusion_adapter,
+    "dictlora4velora": create_dict_lora4velora_adapter,
+    "dictlora4fastervelora": create_dict_lora4fastervelora_adapter,
+    "dictlora4cat": create_dict_lora4cat_adapter,
+    "dictlora4ecam": create_dict_lora4ecam_adapter,
+    "dictlora4pcam": create_dict_lora4pcam_adapter,
+    "dictlora4mole": create_dict_lora4mole_adapter,
+    "dictlora4samd": create_dict_lora4samd_adapter,
     "lora": create_lora_adapter,
+    "vera": create_vera_adapter,
+
     "houlsby": create_houlsby_adapter,
     "moslora": create_moslora_adapter,
     "melora": create_melora_adapter,

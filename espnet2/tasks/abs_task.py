@@ -184,6 +184,60 @@ CONFIG_REPLACE_MAP = [
     ("aux_task_names", "aux_ctc_tasks"),
 ]
 
+_1best_models={
+    "US": ["CA"],
+    "UK": ["ES"],
+    "IND":["US"],
+    "CHN":["JPN"],
+    "JPN":["KR"],
+    "PT": ["ES"],
+    "RU": ["ES"],
+    "KR": ["JPN"],
+    "CA": ["US"],
+    "ES": ["US"]
+}
+_3best_models={
+    "US": ["PT","CA","ES"],
+    "UK": ["US","CA","ES"],
+    "IND":["US","UK","CA"],
+    "CHN":["JPN","RU","KR"],
+    "JPN":["CHN","RU","KR"],
+    "PT": ["US","CA","ES"],
+    "RU": ["JPN","PT","ES"],
+    "KR": ["US","JPN","ES"],
+    "CA": ["US","UK","PT"],
+    "ES": ["US","PT","RU"]
+}
+_5best_models={
+    "US": ["UK","PT","RU","CA","ES"],
+    "UK": ["US","PT","KR","CA","ES"],
+    "IND":["US","UK","PT","CA","ES"],
+    "CHN":["US","JPN","RU","KR","ES"],
+    "JPN":["US","CHN","RU","KR","ES"],
+    "PT": ["US","RU","KR","CA","ES"],
+    "RU": ["US","JPN","PT","KR","ES"],
+    "KR": ["US","JPN","PT","CA","ES"],
+    "CA": ["US","UK","PT","KR","ES"],
+    "ES": ["US","UK","PT","RU","KR"]
+}
+_7best_models={
+    "US": ["UK","JPN","PT","RU","KR","CA","ES"],
+    "UK": ["US","JPN","PT","RU","KR","CA","ES"],
+    "IND":["US","UK","PT","RU","KR","CA","ES"],
+    "CHN":["US","JPN","PT","RU","KR","CA","ES"],
+    "JPN":["US","UK","CHN","PT","RU","KR","ES"],
+    "PT": ["US","UK","JPN","PT","RU","KR","ES"],
+    "RU": ["US","CHN","JPN","PT","KR","CA","ES"],
+    "KR": ["US","UK","JPN","PT","RU","CA","ES"],
+    "CA": ["US","UK","IND","CHN","PT","KR","ES"],
+    "ES": ["US","UK","JPN","PT","RU","KR","CA"]
+}
+Nbest_map = {
+    "1best": _1best_models,
+    "3best": _3best_models,
+    "5best": _5best_models,
+    "7best": _7best_models
+}
 
 @dataclass
 class IteratorOptions:
@@ -1372,7 +1426,34 @@ class AbsTask(ABC):
 
             # Use adapter to finetune the large pre-trained foundation models
             if getattr(args, "use_adapter", False):
+                if args.adapter in ['dictlora4velora','dictlora4fastervelora','dictlora4lanfusion','dictlora4cat','dictlora4pcam','dictlora4samd','dictlora4mole']:
+                    Nbest = Nbest_map.get(args.adapter_conf["Nbest"])
+                    args.adapter_conf["key_name_list"]=Nbest[args.adapter_conf["domain"]]
+                    args.adapter_conf["rank"]=[args.adapter_conf["rank"]]*len(args.adapter_conf["key_name_list"]) # we assume that the rank of each expert are equal by default.
+                    
+                    if args.adapter=="dictlora4pcam":
+                        # we add the teacher expert for P-CAM
+                        args.adapter_conf["key_name_list"].append(args.adapter_conf["domain"])
+                        args.adapter_conf["rank"].append(args.adapter_conf["rank"][0]) # we assume that the rank of each expert are equal by default.
+
+                    for k in args.adapter_conf["key_name_list"]:
+                        args.init_param.append(args.adapter_conf["expert_path"].format(k,args.encoder_conf["whisper_model"].split(".")[0],k))
+                        
+                elif args.adapter=="dictlora4ecam":
+                    Nbest = Nbest_map.get(args.adapter_conf["Nbest"])
+                    experts_list = Nbest[args.adapter_conf["domain"]]
+                    for expert in experts_list:
+                        args.init_param.append(args.adapter_conf["expert_path"].format(expert,args.encoder_conf["whisper_model"].split(".")[0],expert))
+                
+                elif args.adapter in ["dictlora","vera"]:
+                    # nothing to do with dictlora
+                    pass
+                
+                else:
+                    raise NotImplementedError
+
                 create_adapter(model, args.adapter, args.adapter_conf)
+
                 if args.encoder=="hubert" or args.encoder=="wav2vec2":
                     # for hubert and wav2vec2, there is a output layer and a ctc head that should be trainable
                     for p in model.encoder.output_layer.parameters():
@@ -1384,8 +1465,8 @@ class AbsTask(ABC):
                     pass
                 else:
                     # it depends on the specific models
-                    NotImplementedError("args.encoder{} is not recognized".format(args.encoder))
-
+                    raise NotImplementedError("args.encoder{} is not recognized".format(args.encoder))
+                
             # 3. Build optimizer
             optimizers = cls.build_optimizers(args, model=model)
 
@@ -1484,13 +1565,15 @@ class AbsTask(ABC):
                 write_collected_feats=args.write_collected_feats,
             )
         else:
+            uniform_soup=None
             # 6. Loads pre-trained model
-            for p in args.init_param:
+            for id, p in enumerate(args.init_param):
                 logging.info(f"Loading pretrained params from {p}")
-                load_pretrained_model(
+                uniform_soup=load_pretrained_model(
                     model=model,
                     init_param=p,
                     ignore_init_mismatch=args.ignore_init_mismatch,
+                    id=id,
                     # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
                     #   in PyTorch<=1.4
                     map_location=(
@@ -1498,6 +1581,10 @@ class AbsTask(ABC):
                         if args.ngpu > 0
                         else "cpu"
                     ),
+                    adapter_type= args.adapter if getattr(args, "use_adapter", False) else None,
+                    num_models=len(args.init_param)-1,
+                    src_experts_key_name= args.adapter_conf["domain"] if getattr(args, "use_adapter", False) and args.adapter=="dictlora4ecam" else None,
+                    uniform_soup=uniform_soup,
                 )
 
             # 7. Build iterator factories
@@ -2354,12 +2441,15 @@ class AbsTask(ABC):
             # if args.init_param exists, mean that the backbone is initialized by users.
             # generally, we only save the trainable parameters, e.g., lora modules.
             # Therefore the bulit model should be initialized again when use_adapter=True
-            for p in args.init_param:
+            
+            uniform_soup=None
+            for id, p in enumerate(args.init_param):
                 logging.info(f"Loading pretrained params from {p}")
-                load_pretrained_model(
+                uniform_soup=load_pretrained_model(
                     model=model,
                     init_param=p,
                     ignore_init_mismatch=args.ignore_init_mismatch,
+                    id=id,
                     # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
                     #   in PyTorch<=1.4
                     map_location=(
@@ -2367,7 +2457,14 @@ class AbsTask(ABC):
                         if args.ngpu > 0
                         else "cpu"
                     ),
+                    adapter_type= args.adapter if getattr(args, "use_adapter", False) else None,
+                    num_models=len(args.init_param)-1,
+                    src_experts_key_name= args.adapter_conf["domain"] if getattr(args, "use_adapter", False) and args.adapter=="dictlora4ecam" else None,
+                    uniform_soup=uniform_soup,
                 )
+
+            # this is for test-time LoRA merge, args.adapter should be DictLoRA4LanFusion
+            # model_file=None
 
         if model_file is not None:
             if device == "cuda":
@@ -2421,4 +2518,11 @@ class AbsTask(ABC):
                     else:
                         raise
 
+            for k, v in state_dict.items():
+                if "lora_A_kid" in k or "lora_B_kid" in k:
+                    if "scaling" in k:
+                        print(f"key{k}---->valus{torch.nn.functional.softmax(v/6)}")
+                    else:
+                        print(f"key{k}---->valus{v}")
+                
         return model, args

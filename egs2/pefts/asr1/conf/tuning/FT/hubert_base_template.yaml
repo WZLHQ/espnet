@@ -5,9 +5,9 @@ encoder_conf:
     hubert_url: https://dl.fbaipublicfiles.com/hubert/hubert_base_ls960.pt # hubert base noFT
     # hubert_url: https://dl.fbaipublicfiles.com/hubert/hubert_large_ll60k.pt # hubert large noFT
     # hubert_url: https://dl.fbaipublicfiles.com/hubert/hubert_xtralarge_ll60k.pt # hubert xlarge noFT
-    hubert_dir_path: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/from_github/hubert-base-95M-960h-noFT # hubert base noFT
-    # hubert_dir_path: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/from_github/hubert-large-316M-60k-noFT # hubert large noFT
-    # hubert_dir_path: /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_pre_trained_models/from_github/hubert-xlarge-1B-60k-noFT # hubert xlarge noFT
+    hubert_dir_path:  # hubert base noFT
+    # hubert_dir_path: # hubert large noFT
+    # hubert_dir_path: # hubert xlarge noFT
     normalize_before: True
     freeze_finetune_updates: 0
 
