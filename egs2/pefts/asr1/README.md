@@ -16,8 +16,6 @@
     > for corpora, we now support [AESRC2020](http://dx.doi.org/10.1109/ICASSP39728.2021.9413386), [CDSD](https://arxiv.org/pdf/2310.15930), [Librilight10](https://arxiv.org/pdf/1912.07875), [Librispeech](https://ieeexplore.ieee.org/document/7178964).
 
 - todo list
-
-    > update you github of fairseq, loralib, whisper
     
     > refined run_data_prepare.sh
     
