@@ -148,3 +148,63 @@ for domain in "${domains[@]}"; do
     ./run_training_inference.sh "$domain" DictLoRA4SAMD whisper $backbone $key 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs ""
 done
 ```
+
+## 4 Issues you might encounter
+
+1. Maxlenratio issue. sometimes, large maxlenratio might cause the following error. All you need to do is to reduce the maxlenratio in conf/decoding/**.yaml to proper value, e.g., 0.3 to 0.25.
+    ```
+    2025-03-28 03:52:18,698 (asr_inference:522) INFO: speech length: 507200
+    2025-03-28 03:52:18,712 (beam_search:428) INFO: decoder input length: 1500
+    2025-03-28 03:52:18,712 (beam_search:429) INFO: max output length: 450
+    2025-03-28 03:52:18,713 (beam_search:430) INFO: min output length: 0
+    Traceback (most recent call last):
+    File "/root/espnet/tools/miniconda/envs/espnet/lib/python3.8/runpy.py", line 194, in _run_module_as_main
+        return _run_code(code, main_globals, None,
+    File "/root/espnet/tools/miniconda/envs/espnet/lib/python3.8/runpy.py", line 87, in _run_code
+        exec(code, run_globals)
+    File "/root/espnet/espnet2/bin/asr_inference.py", line 1184, in <module>
+        main()
+    File "/root/espnet/espnet2/bin/asr_inference.py", line 1180, in main
+        inference(**kwargs)
+    File "/root/espnet/espnet2/bin/asr_inference.py", line 853, in inference
+        results = speech2text(**batch)
+    File "/root/espnet/tools/miniconda/envs/espnet/lib/python3.8/site-packages/torch/utils/_contextlib.py", line 115, in decorate_context
+        return func(*args, **kwargs)
+    File "/root/espnet/espnet2/bin/asr_inference.py", line 559, in __call__
+        results = self._decode_single_sample(enc[0])
+    File "/root/espnet/espnet2/bin/asr_inference.py", line 652, in _decode_single_sample
+        nbest_hyps = self.beam_search(
+    File "/root/espnet/tools/miniconda/envs/espnet/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+        return self._call_impl(*args, **kwargs)
+    File "/root/espnet/tools/miniconda/envs/espnet/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+        return forward_call(*args, **kwargs)
+    File "/root/espnet/espnet/nets/beam_search.py", line 437, in forward
+        best = self.search(running_hyps, x, pre_x=pre_x)
+    File "/root/espnet/espnet/nets/batch_beam_search.py", line 291, in search
+        scores, states = self.score_full(
+    File "/root/espnet/espnet/nets/batch_beam_search.py", line 194, in score_full
+        scores[k], states[k] = d.batch_score(hyp.yseq, hyp.states[k], x)
+    File "/root/espnet/espnet2/asr/decoder/whisper_decoder.py", line 225, in batch_score
+        logp, states = self.forward_one_step(ys, torch.empty(0), xs, cache=None)
+    File "/root/espnet/espnet2/asr/decoder/whisper_decoder.py", line 180, in forward_one_step
+        self.decoders.token_embedding(tgt)
+    RuntimeError: The size of tensor a (449) must match the size of tensor b (448) at non-singleton dimension 1
+    ```
+
+2. Error while loading conda entry point. And the following instructions might solve this issue.
+    ```
+    conda-libmamba-solver (libarchive.so.20: cannot open shared object file: No such file or directory)  
+
+    CondaValueError: You have chosen a non-default solver backend (libmamba) but it was not recognized. Choose one of: classic
+    ```
+
+    ```yaml
+    # 1. overwrite the root/.condarc with following contents:
+    channels:
+    - https://software.repos.intel.com/python/conda/
+    - conda-forge
+    - defaults
+    show_channel_urls: true
+    # 2. delete the conda enviroment "espnet"
+    # 3. re-install espnet-pefts
+    ```
