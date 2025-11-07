@@ -130,5 +130,10 @@ egs2/pefts/asr1/pefts-peft
 egs2/pefts/asr1/pefts-transformers
 egs2/pefts/asr1/pefts-whisper
 egs2/pefts/asr1/pefts-fairseq
+egs2/pefts/asr1/IssuesList.md
+egs2/pefts/asr1/run_log.sh
+
+
+
 tools/whisper
 tools/LoRA
