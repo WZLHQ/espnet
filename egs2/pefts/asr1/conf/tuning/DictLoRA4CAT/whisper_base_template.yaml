@@ -1,12 +1,12 @@
 encoder: whisper
 encoder_conf:
-    whisper_model: medium.en
+    whisper_model: base
     dropout_rate: 0.0
     # do_pad_trim: true         # should be set when doing zero-shot inference
 
 decoder: whisper
 decoder_conf:
-    whisper_model: medium.en
+    whisper_model: base
     dropout_rate: 0.0
 
 model_conf:
@@ -16,6 +16,11 @@ model_conf:
     extract_feats_in_collect_stats: false
     sym_sos: "<|startoftranscript|>"
     sym_eos: "<|endoftext|>"
+
+preprocessor: default
+preprocessor_conf:
+    whisper_language: "zh"
+    whisper_task: "transcribe"
 
 # model selection
 best_model_criterion:
@@ -47,21 +52,21 @@ cudnn_benchmark: false
 accum_grad: 1
 patience: 3
 log_interval: 50
-init_param: ["espnet_outputs/Librispeech100_whisper_FT_outputs/asr_FT_whisper-medium_en_Librispeech100-A1/valid.acc.ave_3best.pth"]
+init_param: ["/root/.cache/whisper/base.pt"]
 
 # -------------hyper-paramters below might should be specified depend on specific corpus-----------------#
 
 # minibatch related
 batch_type: folded
-batch_size: 18
+batch_size: 24
 valid_batch_type: folded
-valid_batch_size: 12 # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
+valid_batch_size: 16 # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
 
 # optimization
 max_epoch: 10
 optim: adamw
 optim_conf:
-    lr: 5.0e-5
+    lr: 5.0e-1
     weight_decay: 0.01
     betas:
     - 0.9
@@ -69,14 +74,14 @@ optim_conf:
     eps: 1.0e-06
 scheduler: warmuplr
 scheduler_conf:
-    warmup_steps: 500
+    warmup_steps: 30
 
 # LoRA finetune related
 use_adapter: true
-adapter: dictlora4samd
+adapter: dictlora4cat
 save_strategy: required_grad_only
 adapter_conf:
-    expert_path: "espnet_outputs/{}_whisper_DictLoRA_outputs/asr_DictLoRA_whisper-{}_en_{}-A1/valid.acc.ave_3best.pth" # you can specify the expert path in run.sh
+    expert_path: "espnet_outputs/{}_whisper_DictLoRA_outputs/asr_DictLoRA_whisper-{}_{}-A2/valid.acc.ave_3best.pth" # you can specify the expert path in run.sh
     domain: null # should be specified in the run.sh
     Nbest: 3best # select from [1best, 3best, 5best, 7best], e.g., "5best" denotes using Top-5 experts
     rank: 32 # we assume that the rank of each expert are equal by default.

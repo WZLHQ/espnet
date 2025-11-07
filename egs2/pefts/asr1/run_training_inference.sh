@@ -6,39 +6,14 @@ set -u
 set -o pipefail
 
 
-: << 'EOF'
-
-# running template for each method
-
-domains=("US" "UK" "IND" "CHN" "JPN" "PT" "RU" "KR" "CA" "ES")
-key=E1
-backbone=medium_en
-for domain in "${domains[@]}"; do
-    ./run_training_inference.sh "$domain" FT whisper $backbone $key 10 13 3 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight" espnet_outputs ""
-    ./run_training_inference.sh "$domain" DictLoRA whisper $backbone $key 10 13 3 0 "--adapter_conf key_name=$domain" espnet_outputs ""
-    ./run_training_inference.sh "$domain" DictLoRA4VeLoRA whisper $backbone $key 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs ""
-    ./run_training_inference.sh "$domain" DictLoRA4FasterVeLoRA whisper $backbone $key 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs ""
-    ./run_training_inference.sh "$domain" DictLoRA4CAT whisper $backbone $key 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs ""
-    ./run_training_inference.sh "$domain" DictLoRA4LanFusion whisper $backbone $key 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs ""
-    ./run_training_inference.sh "$domain" DictLoRA4PCAM whisper $backbone $key 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs ""
-    ./run_training_inference.sh "$domain" DictLoRA4ECAM whisper $backbone $key 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs ""
-
-    # DictLoRA4MOLE and DictLoRA4SAMD denotes MoeLoRA and MoeLoRA*
-    ./run_training_inference.sh "$domain" DictLoRA4MOLE whisper $backbone $key 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs ""
-    ./run_training_inference.sh "$domain" DictLoRA4SAMD whisper $backbone $key 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs ""
-done
-
-EOF
-
-
-
 # select:
-# [CDSD-partA, CDSD-partB] from CDSD
-# [Librilight10, Librispeech100]
-# [US UK IND CHN JPN PT RU KR CA ES] from AESRC2020
+# Librilight10, Librispeech100, Librispeech360
+# accents:[US UK IND CHN JPN PT RU KR CA ES] from AESRC
+# speakers from Libri360-spk
 subcorpus=$1
 
-# select a method from [FT, LoRA, VeRA, DictLoRA, DictLoRA4LanFusion, DictLoRA4VeLoRA, DictLoRA4FasterVeLoRA, DictLoRA4ECAM, DictLoRA4PCAM, DictLoRA4MOLE, DictLoRA4SAMD, DictLoRA4CAT]
+# select a method from:
+# [FT, VeRA, DictLoRA, DictLoRA4LanFusion, DictLoRA4VeLoRA, DictLoRA4FasterVeLoRA, DictLoRA4ECAM, DictLoRA4PCAM, DictLoRA4MOLE, DictLoRA4SAMD, DictLoRA4CAT]
 # DictLoRA4MOLE denotes MoeLoRA in paper
 # DictLoRA4SAMD denotes MoeLoRA* in paper
 method=$2
@@ -48,7 +23,7 @@ method=$2
 model=$3
 # select: 
 # [base, large] for hubert
-# [small, medium, small_en, medium_en] for Whisper
+# [base_en, small_en, medium_en] for Whisper
 model_size=$4
 
 # assign a special key for each experiment
@@ -60,46 +35,44 @@ stop_stage=$7
 
 # depends on backbone model size
 # for whisper_small, inference_nj=8
+# for whisper_medium, inference_nj=3
 inference_nj=$8
 
 # specify gpu id
 export CUDA_VISIBLE_DEVICES=$9
 
-# args that overwrite the args in asr config.
-# for FT, you only need to specify the batch_bins and lr, thus "--batch_bins ** --optim_conf lr=***"
-# for lora, you might need to specify bs, lr, rank, alpha, thus "--batch_bins ** --optim_conf lr=*** --adapter_conf rank=1 --adapter_conf dropout_rate"
+# args that overwrite the args in $asr_config.
 asr_args=${10}
 
 # output dir that contains all experiments
-# "/media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet_outputs_IASR" for Incremental ASR
 explink=${11}
 
 # specify test sets
-# IND_valid IND_test US_valid US_test UK_valid UK_test CHN_valid CHN_test JPN_valid JPN_test PT_valid PT_test RU_valid RU_test KR_valid KR_test CA_valid CA_test ES_valid ES_test
-# Librispeech_valid_clean Librispeech_test_clean
+# this would be helpful when decoding test/dev sets of other domains.
+# 
 specify_test_set=${12}
 
-# 检查软连接是否存在
+# check if the folder "espnet_outputs" exists.
 if [ ! -d "espnet_outputs" ]; then
-  # 如果文件夹不存在，则创建文件夹
+  # if no, then create
   ln -s $explink espnet_outputs
-  echo "软连接$explink 已创建."
+  echo "softlink $explink has been created."
 fi
 
 # decoding and other configures if exits
-decode_batch_size=1
+decode_batch_size=1 # actually, this value is limited to 1.
 use_lm=false
 use_wordlm=false
 use_ngram=false
-lm_config=conf/LM/train_lm_transformer.yaml
-inference_lm=valid.loss.ave.pth
+lm_config=conf/LM/train_lm_transformer.yaml # this won't work unless use_lm==True
+inference_lm=valid.loss.ave.pth # this won't work unless use_lm==True
 
 for sub in ${subcorpus}
 do
 
-  # LM/ASR/decoding configuration
+  # LM/ASR/decoding configuration for each $subcorpus
   if [[ "$model" == *"hubert"* ]]; then
-      # SSL models do not need cleaner ??
+      # SSL models do not need cleaner ???
       cleaner=none
       inference_asr_model=valid.loss.ave.pth
       inference_config="conf/decoding/decode_asr_SSL_ctc_beam3.yaml"
@@ -121,16 +94,14 @@ do
       # whisper models do need whisper_basic as cleaner
       cleaner=whisper_basic
       inference_config="conf/decoding/decode_asr_whisper_noctc_beam3.yaml"
-
-      # you can specify the model
+      # you can specify the inference_asr_model
       inference_asr_model=valid.acc.ave.pth
-
       if [[ "${model_size}" == *"en"* ]]; then
         token_type=whisper_en
         whisper_language=en
       else
         token_type=whisper_multilingual
-        if [[ "$sub" == "Librilight10" ]] || [[ "$sub" == "Librispeech100" ]] ; then
+        if [[ "$sub" == "Librilight10" ]] || [[ "$sub" == *"Librispeech"* ]] ; then
           whisper_language=en
         elif [[ "$sub" == *"CDSD"* ]]; then
           whisper_language=zh
@@ -139,34 +110,31 @@ do
           exit 1
         fi
       fi
-
       nbpe=1 # make no sense, just prevent from complain
 
   else
-      echo "Model not recognized. Please check the model name."
+      echo "$model not recognized. Please check the model name."
       exit 1
   fi
 
-  # output dir for current experiment
+  # create output dir for current experiment
   expdir=${explink}/${sub}_"${model}"_"${method}"_outputs
-  # 检查文件夹是否存在
   if [ ! -d "$expdir" ]; then
-    # 如果文件夹不存在，则创建文件夹
     mkdir "$expdir"
-    echo "文件夹 $expdir 已创建."
+    echo "folder $expdir has been created."
   fi
 
   # dataset
   train_set="${sub}_train"
   
-  if [[ "${sub}" == *"Libri"* ]]; then
+  if [[ "$sub" == "Librilight10" ]] || [[ "$sub" == *"Librispeech"* ]] ; then
     train_dev="Librispeech_valid"
   else
     train_dev="${sub}_valid"
   fi
 
   if [[ "${specify_test_set}" == "" ]]; then
-    if [[ "${sub}" == *"Libri"* ]]; then
+    if [[ "$sub" == "Librilight10" ]] || [[ "$sub" == *"Librispeech"* ]] ; then
       # test_set="Librispeech_valid_clean Librispeech_valid_other Librispeech_test_clean Librispeech_test_other"
       test_set="Librispeech_valid_clean Librispeech_test_clean"
     else
@@ -180,7 +148,9 @@ do
   for k in ${key}
   do
 
+    # Note that the $asr_args will overwrite the args of the template
     base_asr_config=conf/tuning/${method}/${model}_${model_size}_template.yaml
+    # create asr tag for current experiment
     asr_tag=${method}_${model}-${model_size}_${sub}-${k}
 
     ./asr.sh \
@@ -222,4 +192,6 @@ do
   done
 done
 
-# --inference_tag "test-time_lora_merge" \
+# the following code renames the name of inference_tag
+# this would be helpful in some cases
+# --inference_tag "MAS-LoRA" \

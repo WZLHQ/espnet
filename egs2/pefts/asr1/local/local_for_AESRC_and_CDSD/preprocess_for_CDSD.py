@@ -1,8 +1,6 @@
 # Copyright 2020 Audio, Speech and Language Processing Group @ NWPU (Author: Xian Shi)
 # Apache 2.0
 
-# TODO the generated utt2spk file is with some problem, fix it!
-
 import sys
 
 def load_wav_to_text_mapping(file_path):

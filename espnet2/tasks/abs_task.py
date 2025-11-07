@@ -194,8 +194,9 @@ _1best_models={
     "RU": ["ES"],
     "KR": ["JPN"],
     "CA": ["US"],
-    "ES": ["US"]
+    "ES": ["US"],
 }
+# CDSD-partB-spk01 CDSD-partB-spk04 CDSD-partB-spk06 CDSD-partB-spk08 CDSD-partB-spk09 CDSD-partB-spk12 CDSD-partB-spk20
 _3best_models={
     "US": ["PT","CA","ES"],
     "UK": ["US","CA","ES"],
@@ -206,7 +207,15 @@ _3best_models={
     "RU": ["JPN","PT","ES"],
     "KR": ["US","JPN","ES"],
     "CA": ["US","UK","PT"],
-    "ES": ["US","PT","RU"]
+    "ES": ["US","PT","RU"],
+
+    "CDSD-partB-spk01": ["CDSD-partB-spk04","CDSD-partB-spk06","CDSD-partB-spk20"],
+    "CDSD-partB-spk04": ["CDSD-partB-spk01","CDSD-partB-spk12","CDSD-partB-spk20"],
+    "CDSD-partB-spk06": ["CDSD-partB-spk01","CDSD-partB-spk04","CDSD-partB-spk20"],
+    "CDSD-partB-spk08": ["CDSD-partB-spk04","CDSD-partB-spk12","CDSD-partB-spk20"],
+    "CDSD-partB-spk09": ["CDSD-partB-spk01","CDSD-partB-spk04","CDSD-partB-spk12"],
+    "CDSD-partB-spk12": ["CDSD-partB-spk04","CDSD-partB-spk09","CDSD-partB-spk20"],
+    "CDSD-partB-spk20": ["CDSD-partB-spk01","CDSD-partB-spk04","CDSD-partB-spk06"],
 }
 _5best_models={
     "US": ["UK","PT","RU","CA","ES"],
@@ -218,7 +227,17 @@ _5best_models={
     "RU": ["US","JPN","PT","KR","ES"],
     "KR": ["US","JPN","PT","CA","ES"],
     "CA": ["US","UK","PT","KR","ES"],
-    "ES": ["US","UK","PT","RU","KR"]
+    "ES": ["US","UK","PT","RU","KR"],
+    "Libri360-spk210": ["Libri360-spk3389","Libri360-spk2368","Libri360-spk6553","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk3389": ["Libri360-spk210","Libri360-spk2368","Libri360-spk3615","Libri360-spk525","Libri360-spk2388"],
+    "Libri360-spk2368": ["Libri360-spk210","Libri360-spk3615","Libri360-spk525","Libri360-spk492","Libri360-spk2388"],
+    "Libri360-spk3615": ["Libri360-spk210","Libri360-spk2368","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk479": ["Libri360-spk210","Libri360-spk3389","Libri360-spk3615","Libri360-spk6553","Libri360-spk6458"],
+    "Libri360-spk525": ["Libri360-spk210","Libri360-spk2368","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk6553": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk6458"],
+    "Libri360-spk492": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk2388"],
+    "Libri360-spk2388": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk479","Libri360-spk6458"],
+    "Libri360-spk6458": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk492","Libri360-spk2388"],
 }
 _7best_models={
     "US": ["UK","JPN","PT","RU","KR","CA","ES"],
@@ -232,11 +251,37 @@ _7best_models={
     "CA": ["US","UK","IND","CHN","PT","KR","ES"],
     "ES": ["US","UK","JPN","PT","RU","KR","CA"]
 }
+# CDSD-partA-spk04 CDSD-partA-spk05 CDSD-partA-spk07 CDSD-partA-spk12 CDSD-partA-spk13 CDSD-partA-spk14 CDSD-partA-spk23 CDSD-partA-spk38 CDSD-partA-spk42
+_8best_models={
+    "CDSD-partA-spk04": ["CDSD-partA-spk05","CDSD-partA-spk07","CDSD-partA-spk12","CDSD-partA-spk13","CDSD-partA-spk14","CDSD-partA-spk23","CDSD-partA-spk38","CDSD-partA-spk42"],
+    "CDSD-partA-spk05": ["CDSD-partA-spk04","CDSD-partA-spk07","CDSD-partA-spk12","CDSD-partA-spk13","CDSD-partA-spk14","CDSD-partA-spk23","CDSD-partA-spk38","CDSD-partA-spk42"],
+    "CDSD-partA-spk07": ["CDSD-partA-spk04","CDSD-partA-spk05","CDSD-partA-spk12","CDSD-partA-spk13","CDSD-partA-spk14","CDSD-partA-spk23","CDSD-partA-spk38","CDSD-partA-spk42"],
+    "CDSD-partA-spk12": ["CDSD-partA-spk04","CDSD-partA-spk05","CDSD-partA-spk07","CDSD-partA-spk13","CDSD-partA-spk14","CDSD-partA-spk23","CDSD-partA-spk38","CDSD-partA-spk42"],
+    "CDSD-partA-spk13": ["CDSD-partA-spk04","CDSD-partA-spk05","CDSD-partA-spk07","CDSD-partA-spk12","CDSD-partA-spk14","CDSD-partA-spk23","CDSD-partA-spk38","CDSD-partA-spk42"],
+    "CDSD-partA-spk14": ["CDSD-partA-spk04","CDSD-partA-spk05","CDSD-partA-spk07","CDSD-partA-spk12","CDSD-partA-spk13","CDSD-partA-spk23","CDSD-partA-spk38","CDSD-partA-spk42"],
+    "CDSD-partA-spk23": ["CDSD-partA-spk04","CDSD-partA-spk05","CDSD-partA-spk07","CDSD-partA-spk12","CDSD-partA-spk13","CDSD-partA-spk14","CDSD-partA-spk38","CDSD-partA-spk42"],
+    "CDSD-partA-spk38": ["CDSD-partA-spk04","CDSD-partA-spk05","CDSD-partA-spk07","CDSD-partA-spk12","CDSD-partA-spk13","CDSD-partA-spk14","CDSD-partA-spk23","CDSD-partA-spk42"],
+    "CDSD-partA-spk42": ["CDSD-partA-spk04","CDSD-partA-spk05","CDSD-partA-spk07","CDSD-partA-spk12","CDSD-partA-spk13","CDSD-partA-spk14","CDSD-partA-spk23","CDSD-partA-spk38"],
+}
+_9best_models={
+    "Libri360-spk210": ["Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk3389": ["Libri360-spk210","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk2368": ["Libri360-spk210","Libri360-spk3389","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk3615": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk479": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk525": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk6553","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk6553": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk492": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk2388","Libri360-spk6458"],
+    "Libri360-spk2388": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk6458"],
+    "Libri360-spk6458": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk2388"],
+}
 Nbest_map = {
     "1best": _1best_models,
     "3best": _3best_models,
     "5best": _5best_models,
-    "7best": _7best_models
+    "7best": _7best_models,
+    "8best": _8best_models,
+    "9best": _9best_models,
 }
 
 @dataclass
@@ -1437,16 +1482,18 @@ class AbsTask(ABC):
                         args.adapter_conf["rank"].append(args.adapter_conf["rank"][0]) # we assume that the rank of each expert are equal by default.
 
                     for k in args.adapter_conf["key_name_list"]:
+                        # NOTE please specify the format_func according to your patterns of args.adapter_conf["expert_path"] 
                         args.init_param.append(args.adapter_conf["expert_path"].format(k,args.encoder_conf["whisper_model"].split(".")[0],k))
                         
                 elif args.adapter=="dictlora4ecam":
                     Nbest = Nbest_map.get(args.adapter_conf["Nbest"])
                     experts_list = Nbest[args.adapter_conf["domain"]]
                     for expert in experts_list:
+                        # NOTE please specify the format_func according to your patterns of args.adapter_conf["expert_path"] 
                         args.init_param.append(args.adapter_conf["expert_path"].format(expert,args.encoder_conf["whisper_model"].split(".")[0],expert))
                 
                 elif args.adapter in ["dictlora","vera"]:
-                    # nothing to do with dictlora
+                    # nothing to do with dictlora and vera
                     pass
                 
                 else:

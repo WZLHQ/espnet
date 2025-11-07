@@ -62,7 +62,7 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
 fi
 
 if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
-    log "stage 3: combine all training and development sets"
+    log "stage 3: combine all development sets (both clean and other)"
     utils/combine_data.sh --extra_files utt2num_frames data/Librispeech_${train_dev} data/Librispeech_valid_clean data/Librispeech_valid_other
 fi
 

@@ -61,7 +61,7 @@ valid_batch_size: 12 # large valid_batch_bins lead to large GPU memory, we can s
 max_epoch: 10
 optim: adamw
 optim_conf:
-    lr: 1.0e-4
+    lr: 5.0e-3
     weight_decay: 0.01
     betas:
     - 0.9

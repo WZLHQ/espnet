@@ -103,6 +103,8 @@ ln -s ../../../tools/miniconda/envs/espnet/lib/python3.8/site-packages/transform
 # After you truely understand how it works, you can do the any combination among corpus, model, and method.
 ./run_training_inference.sh "Librilight10" LoRA hubert base "A0" 10 13 4 0 "--adapter_conf rank=8 --adapter_conf alpha=8" /*/espnet_outputs
 ```
+## 4 Acknowledgment
+
 ## 4 Notes
 1. data and dump for each corpus
 

@@ -31,7 +31,7 @@ if [[ "${corpus}" == *"CDSD"* ]] || [[ "${corpus}" == *"AESRC"* ]]; then
     if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         # we assume that you have already download and unzip the *.zip file
         # please apply the CDSD data at https://arxiv.org/pdf/2310.15930
-        # please apply the AESRC data at ***
+        # please apply the AESRC data at https://www.nexdata.ai/datasets/speechrecog
         echo "data already been unzipped"
     fi
 
@@ -39,15 +39,32 @@ if [[ "${corpus}" == *"CDSD"* ]] || [[ "${corpus}" == *"AESRC"* ]]; then
 
         echo "Data preparation"
 
-        for data_set in ${data_sets};do
+        for data_set in ${data_sets}; do
 
             if [[ "${corpus}" == *"CDSD"* ]]; then
-                
-                if [[ "${data_set}" == *"partA"* ]]; then # for partA
-                    local/local_for_AESRC_and_CDSD/data_prep.sh ${corpus_path}/CDSD-Interspeech/after_catting/1h ${data} ${corpus}
-                elif [[ "${data_set}" == *"partB"* ]]; then # for partB
-                    local/local_for_AESRC_and_CDSD/data_prep.sh ${corpus_path}/CDSD-Interspeech/after_catting/10h ${data} ${corpus}
+
+                if [[ "${data_set}" == *"partA"* ]]; then
+
+                    if [[ "${data_set}" == *"spk"* ]]; then
+                        spkid="${data_set: -2}"
+                        raw_data=${corpus_path}/after_catting/1h/Audio/${spkid}
+                    else
+                        raw_data=${corpus_path}/after_catting/1h/
+                    fi
+
+                elif [[ "${data_set}" == *"partB"* ]]; then
+                    if [[ "${data_set}" == *"spk"* ]]; then
+                        spkid="${data_set: -2}"
+                        raw_data=${corpus_path}/after_catting/10h/Audio/${spkid}
+                    else
+                        raw_data=${corpus_path}/after_catting/10h/
+                    fi
+                else
+                    echo "what is $data_set ?"
+                    exit 1
                 fi
+
+                local/local_for_AESRC_and_CDSD/data_prep.sh ${raw_data} ${data} ${corpus}
 
             elif [[ "${corpus}" == *"AESRC"* ]]; then
                 # local/local_for_AESRC_and_CDSD/download_and_untar.sh ${corpus_path} # only run for once
