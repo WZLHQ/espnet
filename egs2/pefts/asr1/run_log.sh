@@ -649,3 +649,4 @@ Nbest=8best
 for domain in "${domains[@]}"; do
     ./run_training_inference.sh "$domain" DictLoRA4PCAM whisper $backbone $key 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=$Nbest" espnet_outputs ""
 done
+
