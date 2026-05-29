@@ -1454,6 +1454,8 @@ if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~
     else
         log "Use ESPnet trainer"
         # shellcheck disable=SC2086
+        # No debug: ${python} -m espnet2.bin.${asr_task}_train \
+        # For debug: ${python} -m debugpy --listen 5678 --wait-for-client /media/rosie/d921a251-72e5-45d8-9e41-0309cf76c6b4/espnet/espnet2/bin/${asr_task}_train.py \
         ${python} -m espnet2.bin.launch \
             --cmd "${cuda_cmd} --name ${jobname}" \
             --log "${asr_exp}"/train.log \

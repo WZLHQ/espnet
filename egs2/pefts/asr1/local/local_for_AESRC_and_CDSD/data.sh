@@ -47,17 +47,17 @@ if [[ "${corpus}" == *"CDSD"* ]] || [[ "${corpus}" == *"AESRC"* ]]; then
 
                     if [[ "${data_set}" == *"spk"* ]]; then
                         spkid="${data_set: -2}"
-                        raw_data=${corpus_path}/after_catting/1h/Audio/${spkid}
+                        raw_data=${corpus_path}/1h/Audio/${spkid}
                     else
-                        raw_data=${corpus_path}/after_catting/1h/
+                        raw_data=${corpus_path}/1h/
                     fi
 
                 elif [[ "${data_set}" == *"partB"* ]]; then
                     if [[ "${data_set}" == *"spk"* ]]; then
                         spkid="${data_set: -2}"
-                        raw_data=${corpus_path}/after_catting/10h/Audio/${spkid}
+                        raw_data=${corpus_path}/10h/Audio/${spkid}
                     else
-                        raw_data=${corpus_path}/after_catting/10h/
+                        raw_data=${corpus_path}/10h/
                     fi
                 else
                     echo "what is $data_set ?"

@@ -224,6 +224,11 @@ class ESPnetASRModel(AbsESPnetModel):
                 if any(t in n for t in trainable_target_name):
                     p.requires_grad=True
 
+        # print the keys of trainable parameters
+        # for n, p in self.named_parameters():
+        #     if p.requires_grad:
+        #         logging.info("Trainable parameter: {}".format(n))
+
     def forward(
         self,
         speech: torch.Tensor,

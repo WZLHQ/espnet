@@ -27,6 +27,9 @@ class OpenAIWhisperEncoder(AbsEncoder):
         use_specaug: bool = False,
         specaug_conf: Union[dict, None] = None,
         do_pad_trim: bool = False,
+        adapter_type=None,
+        adapter_dim=35,
+        peg_adapter_num=3,
     ):
         try:
             import whisper
@@ -53,7 +56,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
 
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu"
+            whisper_model, download_root=download_dir, device="cpu", adapter_type=adapter_type, adapter_dim=adapter_dim, peg_adapter_num=peg_adapter_num
         )
         self.encoders = copy.deepcopy(_model.encoder)
         self.encoders.train()

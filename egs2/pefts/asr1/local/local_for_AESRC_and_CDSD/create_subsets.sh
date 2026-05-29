@@ -15,7 +15,7 @@ if [ -d ${data} ];then
         if  [[ "${recog_set}" == *"spk"* ]]; then
             key='0~5p'
         else
-            key='0~40p'
+            key='0~10p'
         fi
 
         sed -n "${key}" $data/data_all/wav.scp > $data/cv.scp

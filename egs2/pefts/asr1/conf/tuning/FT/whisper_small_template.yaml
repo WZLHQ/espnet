@@ -1,12 +1,12 @@
 encoder: whisper
 encoder_conf:
-    whisper_model: base
+    whisper_model: small
     dropout_rate: 0.0
-    # do_pad_trim: true         # should be set when doing zero-shot inference
+    use_multiscale: false
 
 decoder: whisper
 decoder_conf:
-    whisper_model: base
+    whisper_model: small
     dropout_rate: 0.0
 
 model_conf:
@@ -59,9 +59,9 @@ init_param: []
 
 # minibatch related
 batch_type: folded
-batch_size: 72
+batch_size: 36
 valid_batch_type: folded
-valid_batch_size: 48 # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
+valid_batch_size: 36 # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
 
 # optimization
 max_epoch: 10

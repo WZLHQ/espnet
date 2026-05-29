@@ -23,7 +23,7 @@ method=$2
 model=$3
 # select: 
 # [base, large] for hubert
-# [base_en, small_en, medium_en] for Whisper
+# [base_en, small_en, medium_en, medium, ...] for Whisper
 model_size=$4
 
 # assign a special key for each experiment
@@ -138,8 +138,8 @@ do
       # test_set="Librispeech_valid_clean Librispeech_valid_other Librispeech_test_clean Librispeech_test_other"
       test_set="Librispeech_valid_clean Librispeech_test_clean"
     else
-      # test_set="${sub}_valid ${sub}_test"
-      test_set="${sub}_test"
+      test_set="${sub}_valid ${sub}_test"
+      # test_set="${sub}_test"
     fi
   else
     test_set=$specify_test_set
