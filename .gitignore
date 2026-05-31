@@ -121,8 +121,6 @@ tools/lightning_constraints.txt
 # added by QH
 # for the current recipe
 egs2/pefts/asr1/archive
-egs2/pefts/asr1/espnet_outputs
-egs2/pefts/asr1/espnet_outputs_new
 egs2/pefts/asr1/pefts-espnet
 egs2/pefts/asr1/pefts-espnet2
 egs2/pefts/asr1/pefts-loralib
@@ -133,7 +131,10 @@ egs2/pefts/asr1/pefts-fairseq
 egs2/pefts/asr1/IssuesList.md
 egs2/pefts/asr1/run_log.sh
 
-
+egs*/*/*/espnet_outputs*
+egs*/*/*/*espnet*
+egs*/*/*/*espnet2*
+egs*/*/*/*whisper*
 
 tools/whisper
 tools/LoRA

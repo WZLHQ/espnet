@@ -1,0 +1,88 @@
+encoder: whisper
+encoder_conf:
+    whisper_model: small.en
+    dropout_rate: 0.0
+    use_specaug: true
+    specaug_conf:
+        apply_time_warp: true
+        time_warp_window: 5
+        time_warp_mode: bicubic
+        apply_freq_mask: true
+        freq_mask_width_range:
+        - 0
+        - 40
+        num_freq_mask: 2
+        apply_time_mask: true
+        time_mask_width_ratio_range:
+        - 0.
+        - 0.12
+        num_time_mask: 5
+    # do_pad_trim: true         # should be set when doing zero-shot inference
+
+decoder: whisper
+decoder_conf:
+    whisper_model: small.en
+    dropout_rate: 0.0
+
+model_conf:
+    ctc_weight: 0.0
+    lsm_weight: 0.1
+    length_normalized_loss: false
+    extract_feats_in_collect_stats: false
+    sym_sos: "<|startoftranscript|>"
+    sym_eos: "<|endoftext|>"
+    temperature: 1
+
+# model selection
+best_model_criterion:
+-  - valid
+   - acc
+   - max
+keep_nbest_models: 3
+
+early_stopping_criterion: ["valid", "acc", "max"]
+
+# plot related
+use_matplotlib: true
+num_att_plot: 0
+
+# dataloader
+num_workers: 4
+
+# random seed
+seed: 2022
+
+# others
+init: none
+input_size: 1
+normalize: null
+frontend: null
+use_amp: true
+cudnn_deterministic: false
+cudnn_benchmark: false
+accum_grad: 1
+patience: none
+log_interval: 50
+init_param: []
+
+# -------------hyper-paramters below might should be specified depend on specific corpus-----------------#
+
+# minibatch related
+batch_type: folded
+batch_size: 72
+valid_batch_type: folded
+valid_batch_size: 64 # large valid_batch_bins lead to large GPU memory, we can set it the half of batch_bins (training)
+
+# optimization
+max_epoch: 10
+optim: adamw
+optim_conf:
+    lr: 2.0e-05
+    weight_decay: 0.01
+    betas:
+    - 0.9
+    - 0.99
+    eps: 1.0e-06
+scheduler: warmuplr
+scheduler_conf:
+    warmup_steps: 1500
