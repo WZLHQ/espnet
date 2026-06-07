@@ -6,19 +6,63 @@ set -u
 set -o pipefail
 
 
-#----------------------------run logs-------------------------------#
+#----------------------------CDSD run logs-------------------------------#
 # ./run.sh CDSD-partB FT e_branchformer fasle A1 10 13 4 0 "" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A2 11 13 4 1 "--optim_conf lr=0.001 --scheduler_conf warmup_steps=15000" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A3 11 13 4 0 "--optim_conf lr=0.002 --scheduler_conf warmup_steps=35000" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A4 11 13 4 1 "--optim_conf lr=0.0005 --scheduler_conf warmup_steps=35000" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A5 11 13 4 1 "--optim_conf lr=0.003 --scheduler_conf warmup_steps=35000" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle RPE 11 13 4 0 "" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle Mscale1 11 13 4 0 "" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A6 11 13 4 1 "" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A7 11 13 4 1 "" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A7a 11 13 4 0 "--batch_size 256 --scheduler_conf warmup_steps=10000" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A6a 11 13 4 0 "" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A6b 11 13 4 1 "--optim_conf lr=0.005" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A7b 11 13 4 0 "--encoder_conf merge_type=averaging" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A7e 11 13 4 1 "--encoder_conf merge_type=glu3" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A7d 11 13 4 0 "--encoder_conf merge_type=conv1" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A7c 11 13 4 1 "--encoder_conf merge_type=original1" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A8 11 13 4 1 "--encoder_conf conv_after_att=true" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A7a1 11 13 4 1 "--encoder_conf merge_type=original" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A7a2 11 13 4 0 "--encoder_conf merge_type=original --encoder_conf cgmlp_linear_units=512" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT e_branchformer fasle A7a3 11 13 4 0 "--encoder_conf cgmlp_linear_units=512" "" espnet_outputs ""
+
+
+# ./run.sh CDSD-partB FT conformer fasle A1 10 13 4 0 "" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT conformer fasle A2 11 13 4 1 "--optim_conf lr=0.002" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT conformer fasle A3 11 13 4 1 "--optim_conf lr=0.001" "" espnet_outputs ""
+
+
+# ./run.sh CDSD-partB FT transformer fasle A1 11 13 4 0 "" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT transformer fasle B1 11 13 4 1 "--encoder_conf is_ATT_MLP_parallel=true" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT transformer fasle C1 11 13 4 0 "" "" espnet_outputs ""
+# ./run.sh CDSD-partB FT transformer fasle C2 11 13 4 1 "--encoder_conf is_ATT_MLP_parallel=true" "" espnet_outputs ""
+
+
+#----------------------------Aishell1 run logs-------------------------------#
+# ./run.sh Aishell1 FT branchformer fasle A1 11 13 4 1 "" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle B1 11 13 8 0 "--encoder_conf using_glu=true" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle B2 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle B3 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_att=true" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A2 11 13 4 0 "--encoder_conf merge_method=averaging" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle B4 11 13 4 1 "--encoder_conf using_silu=true --encoder_conf merge_method=averaging" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A4 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A3 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_mlp=true" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A5 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_att=true" "" espnet_outputs ""
 
 
 
 # [CDSD-partA, CDSD-partB] from CDSD
+# Aishell1
 subcorpus=$1
 
 # select a method from [FT, LoRA, adapter]
 method=$2
 
 # select: 
-# [e_branchformer, whisper, whisper_small_en, hubert, hubert_small, ...]
+# [branchformer, e_branchformer, conformer, transformer]
+# [whisper, whisper_small_en, hubert, hubert_small, ...]
 model=$3
 is_ctc_only=$4 # true or false
 is_streaming=false # defualt, we do not consider streaming decoding
@@ -67,12 +111,10 @@ decode_batch_size=1 # untill now, espnet only suport decode batch size 1
 inference_config="conf/decoding/decode_asr.yaml"
 nbpe=1 # depends the backbone model
 
-# whisper_language=temp # will be set when using whisper
-
 for sub in ${subcorpus}
 do
 
-  if [[ "$model" == *"branchformer"* || "$model" == "hubert" ]]; then
+  if [[ "$model" == *"branchformer"* || "$model" == "hubert" || "$model" == "conformer"  || "$model" == "transformer" ]]; then
 
       if [[ "${is_ctc_only}" == true ]]; then
         inference_asr_model=valid.loss.ave.pth
@@ -87,7 +129,7 @@ do
       elif [[ "$sub" == "Librispeech100" ]]; then
         token_type=bpe # or Char
         nbpe=5000
-      elif [[ "$sub" == *"CDSD"* ]]; then
+      elif [[ "$sub" == *"CDSD"* || "$sub" == *"Aishell"* ]]; then
         token_type=char
       else
        echo "please specify token_type for ${sub}"

@@ -1,29 +1,23 @@
 # network architecture
 # encoder related
-encoder: e_branchformer
+encoder: conformer
 encoder_conf:
-    output_size: 256
+    output_size: 256    # dimension of attention
     attention_heads: 4
-    attention_layer_type: rel_selfattn
-    pos_enc_layer_type: rel_pos
-    rel_pos_type: latest
-    cgmlp_linear_units: 1024
-    cgmlp_conv_kernel: 31
-    use_linear_after_conv: false
-    gate_activation: identity
-    num_blocks: 12
+    linear_units: 1024  # the number of units of position-wise feed forward
+    num_blocks: 12      # the number of encoder blocks
     dropout_rate: 0.1
     positional_dropout_rate: 0.1
     attention_dropout_rate: 0.1
-    input_layer: conv2d
-    layer_drop_rate: 0.0
-    linear_units: 1024
-    positionwise_layer_type: linear
-    use_ffn: false # true
-    macaron_ffn: false # true
-    merge_type: averaging # original, averaging, glu1, glu2, glu3
-    merge_conv_kernel: 31
-    conv_after_att: false
+    input_layer: conv2d # encoder architecture type
+    normalize_before: true
+    rel_pos_type: latest
+    pos_enc_layer_type: rel_pos
+    selfattention_layer_type: rel_selfattn
+    activation_type: swish
+    macaron_style: true
+    use_cnn_module: true
+    cnn_module_kernel: 31
 
 # decoder related
 decoder: transformer
@@ -44,7 +38,7 @@ model_conf:
 
 # minibatch related
 batch_type: folded
-batch_size: 256
+batch_size: 72
 
 # plot related
 use_matplotlib: true
@@ -69,13 +63,14 @@ best_model_criterion:
 #     - min
 keep_nbest_models: 5
 
+
 optim: adam
 optim_conf:
    lr: 0.003
    weight_decay: 0.000001
 scheduler: warmuplr
 scheduler_conf:
-   warmup_steps: 10000
+   warmup_steps: 35000
 
 num_workers: 4      # num of workers of data loader
 use_amp: true      # automatic mixed precision

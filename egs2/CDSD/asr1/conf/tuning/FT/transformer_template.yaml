@@ -1,30 +1,18 @@
 # network architecture
 # encoder related
-encoder: e_branchformer
+encoder: transformer
 encoder_conf:
-    output_size: 256
+    output_size: 256    # dimension of attention
     attention_heads: 4
-    attention_layer_type: rel_selfattn
-    pos_enc_layer_type: rel_pos
-    rel_pos_type: latest
-    cgmlp_linear_units: 1024
-    cgmlp_conv_kernel: 31
-    use_linear_after_conv: false
-    gate_activation: identity
-    num_blocks: 12
+    linear_units: 1024  # the number of units of position-wise feed forward
+    num_blocks: 12      # the number of encoder blocks
     dropout_rate: 0.1
     positional_dropout_rate: 0.1
-    attention_dropout_rate: 0.1
-    input_layer: conv2d
-    layer_drop_rate: 0.0
-    linear_units: 1024
-    positionwise_layer_type: linear
-    use_ffn: false # true
-    macaron_ffn: false # true
-    merge_type: averaging # original, averaging, glu1, glu2, glu3
-    merge_conv_kernel: 31
-    conv_after_att: false
-
+    attention_dropout_rate: 0.0
+    input_layer: conv2d # encoder architecture type
+    normalize_before: true
+    is_ATT_MLP_parallel: false
+    
 # decoder related
 decoder: transformer
 decoder_conf:
@@ -33,8 +21,8 @@ decoder_conf:
     num_blocks: 6
     dropout_rate: 0.1
     positional_dropout_rate: 0.1
-    self_attention_dropout_rate: 0.
-    src_attention_dropout_rate: 0.
+    self_attention_dropout_rate: 0.0
+    src_attention_dropout_rate: 0.0
 
 # hybrid CTC/attention
 model_conf:
@@ -52,7 +40,6 @@ num_att_plot: 0
 
 # early stopping
 early_stopping_criterion: ["valid", "acc", "max"]
-# early_stopping_criterion: ["valid", "loss", "min"] # depends on the best_model_criterion
 patience: 5
 
 # optimization related
@@ -63,10 +50,6 @@ best_model_criterion:
 -   - valid
     - acc
     - max
-# best_model_criterion:
-# -   - valid
-#     - loss
-#     - min
 keep_nbest_models: 5
 
 optim: adam
@@ -81,4 +64,3 @@ num_workers: 4      # num of workers of data loader
 use_amp: true      # automatic mixed precision
 unused_parameters: false    # set as true if some params are unused in DDP
 seed: 2022
-

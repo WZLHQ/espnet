@@ -73,7 +73,9 @@ class EBranchformerEncoderLayer(torch.nn.Module):
         feed_forward: Optional[torch.nn.Module],
         feed_forward_macaron: Optional[torch.nn.Module],
         dropout_rate: float,
+        merge_type: str="original", 
         merge_conv_kernel: int = 3,
+        conv_after_att: bool=False,
     ):
         super().__init__()
 
@@ -96,16 +98,28 @@ class EBranchformerEncoderLayer(torch.nn.Module):
 
         self.dropout = torch.nn.Dropout(dropout_rate)
 
-        self.depthwise_conv_fusion = torch.nn.Conv1d(
-            size + size,
-            size + size,
-            kernel_size=merge_conv_kernel,
-            stride=1,
-            padding=(merge_conv_kernel - 1) // 2,
-            groups=size + size,
-            bias=True,
-        )
-        self.merge_proj = torch.nn.Linear(size + size, size)
+        self.conv_after_att=conv_after_att
+        if conv_after_att:
+            self.pre_conv_att_ln=LayerNorm(size)
+            self.depthwise_conv_aft_att = torch.nn.Conv1d(size,size,kernel_size=merge_conv_kernel,stride=1,padding=(merge_conv_kernel - 1) // 2,groups=size,bias=True)
+            self.conv_after_att_act=torch.nn.GELU()
+            
+        self.merge_type=merge_type
+        if merge_type=="original":
+            self.depthwise_conv_fusion = torch.nn.Conv1d(
+                size + size,
+                size + size,
+                kernel_size=merge_conv_kernel,
+                stride=1,
+                padding=(merge_conv_kernel - 1) // 2,
+                groups=size + size,
+                bias=True,
+            )
+            self.merge_proj = torch.nn.Linear(size + size, size)
+
+        elif merge_type=="original1":
+            self.merge_proj = torch.nn.Linear(size + size, size)
+
 
     def forward(self, x_input, mask, cache=None):
         """Compute encoded features.
@@ -149,6 +163,13 @@ class EBranchformerEncoderLayer(torch.nn.Module):
             else:
                 x_att = self.attn(x1, x1, x1, mask)
 
+        if self.conv_after_att:
+            residual=x_att
+            x_att=self.pre_conv_att_ln(x_att)
+            x_att=self.depthwise_conv_aft_att(x_att.transpose(1,2)).transpose(1,2)
+            x_att=self.conv_after_att_act(x_att)
+            x_att=x_att+residual
+
         x1 = self.dropout(x_att)
 
         # Branch 2: convolutional gating mlp
@@ -163,11 +184,24 @@ class EBranchformerEncoderLayer(torch.nn.Module):
         x2 = self.dropout(x2)
 
         # Merge two branches
-        x_concat = torch.cat([x1, x2], dim=-1)
-        x_tmp = x_concat.transpose(1, 2)
-        x_tmp = self.depthwise_conv_fusion(x_tmp)
-        x_tmp = x_tmp.transpose(1, 2)
-        x = x + self.dropout(self.merge_proj(x_concat + x_tmp))
+        if self.merge_type=="original":
+            x_concat = torch.cat([x1, x2], dim=-1)
+            x_tmp = x_concat.transpose(1, 2)
+            x_tmp = self.depthwise_conv_fusion(x_tmp)
+            x_tmp = x_tmp.transpose(1, 2)
+            x = x + self.dropout(self.merge_proj(x_concat + x_tmp))
+
+        elif self.merge_type=="original1":
+            x_concat = torch.cat([x1, x2], dim=-1)
+            x = x + self.dropout(self.merge_proj(x_concat))
+
+        elif self.merge_type=="averaging":
+            x=x+(x1+x2)/2
+
+        elif self.merge_type=="glu3":
+            # 这个效果略好于original，略差于averaging
+            x_concat=torch.cat([torch.nn.functional.glu(x1),torch.nn.functional.glu(x2)],dim=-1)
+            x=x+x_concat
 
         if self.feed_forward is not None:
             # feed forward module
@@ -213,7 +247,9 @@ class EBranchformerEncoder(AbsEncoder):
         ffn_activation_type: str = "swish",
         linear_units: int = 2048,
         positionwise_layer_type: str = "linear",
+        merge_type: str = "original",
         merge_conv_kernel: int = 3,
+        conv_after_att: bool=False,
         interctc_layer_idx=None,
         interctc_use_conditioning: bool = False,
         qk_norm: bool = False,
@@ -426,7 +462,9 @@ class EBranchformerEncoder(AbsEncoder):
                     else None
                 ),
                 dropout_rate,
+                merge_type,
                 merge_conv_kernel,
+                conv_after_att,
             ),
             layer_drop_rate,
         )

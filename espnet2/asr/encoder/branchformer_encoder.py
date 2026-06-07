@@ -72,6 +72,10 @@ class BranchformerEncoderLayer(torch.nn.Module):
         cgmlp_weight: float = 0.5,
         attn_branch_drop_rate: float = 0.0,
         stochastic_depth_rate: float = 0.0,
+        conv_after_att: bool=False,
+        conv_after_mlp: bool=False,
+        conv_after_merge: bool=False,
+        kernel_size: int=31,
     ):
         super().__init__()
         assert (attn is not None) or (
@@ -94,6 +98,17 @@ class BranchformerEncoderLayer(torch.nn.Module):
         self.norm_final = LayerNorm(size)  # for the final output of the block
 
         self.dropout = torch.nn.Dropout(dropout_rate)
+
+        self.conv_after_att=conv_after_att
+        self.conv_after_mlp=conv_after_mlp
+        self.conv_after_merge=conv_after_merge
+        if conv_after_att or conv_after_mlp or conv_after_merge:
+            self.depthwise_conv_aft_merge =torch.nn.Sequential(
+                torch.nn.Conv1d(size,size,3,stride=1,padding=(3 - 1) // 2,groups=size),
+                torch.nn.SiLU(),
+                torch.nn.Conv1d(size,size,3,stride=1,padding=(3 - 1) // 2,groups=size),
+                torch.nn.SiLU(),
+            )
 
         if self.use_two_branches:
             if merge_method == "concat":
@@ -129,6 +144,8 @@ class BranchformerEncoderLayer(torch.nn.Module):
                 # linear projection after weighted average
                 self.merge_proj = torch.nn.Linear(size, size)
 
+            elif merge_method == "averaging":
+                pass
             else:
                 raise ValueError(f"unknown merge method: {merge_method}")
 
@@ -189,6 +206,11 @@ class BranchformerEncoderLayer(torch.nn.Module):
                 else:
                     x_att = self.attn(x1, x1, x1, mask)
 
+            if self.conv_after_att:
+                residual=x_att
+                x_att=self.depthwise_conv_aft_merge(x_att.transpose(1,2)).transpose(1,2)
+                x_att=residual+x_att
+
             x1 = self.dropout(x_att)
 
         # Branch 2: convolutional gating mlp
@@ -200,6 +222,11 @@ class BranchformerEncoderLayer(torch.nn.Module):
             x2 = self.cgmlp(x2, mask)
             if isinstance(x2, tuple):
                 x2 = x2[0]
+
+            if self.conv_after_mlp:
+                residual=x2
+                x2=self.depthwise_conv_aft_merge(x2.transpose(1,2)).transpose(1,2)
+                x2=residual+x2
 
             x2 = self.dropout(x2)
 
@@ -274,6 +301,10 @@ class BranchformerEncoderLayer(torch.nn.Module):
                         (1.0 - self.cgmlp_weight) * x1 + self.cgmlp_weight * x2
                     )
                 )
+            elif self.merge_method == "averaging":
+                x = x + stoch_layer_coeff * self.dropout(
+                    (x1+x2)/2
+                )
             else:
                 raise RuntimeError(f"unknown merge method: {self.merge_method}")
         else:
@@ -284,6 +315,11 @@ class BranchformerEncoderLayer(torch.nn.Module):
             else:
                 # This should not happen
                 raise RuntimeError("Both branches are not None, which is unexpected.")
+
+        if self.conv_after_merge:
+            residual=x
+            x=self.depthwise_conv_aft_merge(x.transpose(1,2)).transpose(1,2)
+            x=residual+x
 
         x = self.norm_final(x)
 
@@ -311,6 +347,8 @@ class BranchformerEncoder(AbsEncoder):
         cgmlp_conv_kernel: int = 31,
         use_linear_after_conv: bool = False,
         gate_activation: str = "identity",
+        using_glu: bool=False,
+        using_silu: bool=False,
         merge_method: str = "concat",
         cgmlp_weight: Union[float, List[float]] = 0.5,
         attn_branch_drop_rate: Union[float, List[float]] = 0.0,
@@ -322,6 +360,10 @@ class BranchformerEncoder(AbsEncoder):
         zero_triu: bool = False,
         padding_idx: int = -1,
         stochastic_depth_rate: Union[float, List[float]] = 0.0,
+        conv_after_att: bool=False,
+        conv_after_mlp: bool=False,
+        conv_after_merge: bool=False,
+        kernel_size: int=31,
         qk_norm: bool = False,
         use_flash_attn: bool = True,
     ):
@@ -477,6 +519,8 @@ class BranchformerEncoder(AbsEncoder):
             dropout_rate,
             use_linear_after_conv,
             gate_activation,
+            using_glu,
+            using_silu,
         )
 
         if isinstance(stochastic_depth_rate, float):
@@ -518,6 +562,10 @@ class BranchformerEncoder(AbsEncoder):
                 cgmlp_weight[lnum],
                 attn_branch_drop_rate[lnum],
                 stochastic_depth_rate[lnum],
+                conv_after_att,
+                conv_after_mlp,
+                conv_after_merge,
+                kernel_size,
             ),
         )
         self.after_norm = LayerNorm(output_size)

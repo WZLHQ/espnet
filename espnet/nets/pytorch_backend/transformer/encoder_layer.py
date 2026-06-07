@@ -42,6 +42,7 @@ class EncoderLayer(nn.Module):
         dropout_rate,
         normalize_before=True,
         concat_after=False,
+        is_ATT_MLP_parallel=False,
         stochastic_depth_rate=0.0,
     ):
         """Construct an EncoderLayer object."""
@@ -57,8 +58,70 @@ class EncoderLayer(nn.Module):
         if self.concat_after:
             self.concat_linear = nn.Linear(size + size, size)
         self.stochastic_depth_rate = stochastic_depth_rate
+        self.is_ATT_MLP_paralle=is_ATT_MLP_parallel
 
-    def forward(self, x, mask, cache=None):
+    # original forward
+    # def forward(self, x, mask, cache=None):
+    #     """Compute encoded features.
+
+    #     Args:
+    #         x_input (torch.Tensor): Input tensor (#batch, time, size).
+    #         mask (torch.Tensor): Mask tensor for the input (#batch, 1, time).
+    #         cache (torch.Tensor): Cache tensor of the input (#batch, time - 1, size).
+
+    #     Returns:
+    #         torch.Tensor: Output tensor (#batch, time, size).
+    #         torch.Tensor: Mask tensor (#batch, 1, time).
+
+    #     """
+    #     skip_layer = False
+    #     # with stochastic depth, residual connection `x + f(x)` becomes
+    #     # `x <- x + 1 / (1 - p) * f(x)` at training time.
+    #     stoch_layer_coeff = 1.0
+    #     if self.training and self.stochastic_depth_rate > 0:
+    #         skip_layer = torch.rand(1).item() < self.stochastic_depth_rate
+    #         stoch_layer_coeff = 1.0 / (1 - self.stochastic_depth_rate)
+
+    #     if skip_layer:
+    #         if cache is not None:
+    #             x = torch.cat([cache, x], dim=1)
+    #         return x, mask
+
+    #     residual = x
+    #     if self.normalize_before:
+    #         x = self.norm1(x)
+
+    #     if cache is None:
+    #         x_q = x
+    #     else:
+    #         assert cache.shape == (x.shape[0], x.shape[1] - 1, self.size)
+    #         x_q = x[:, -1:, :]
+    #         residual = residual[:, -1:, :]
+    #         mask = None if mask is None else mask[:, -1:, :]
+
+    #     if self.concat_after:
+    #         x_concat = torch.cat((x, self.self_attn(x_q, x, x, mask)), dim=-1)
+    #         x = residual + stoch_layer_coeff * self.concat_linear(x_concat)
+    #     else:
+    #         x = residual + stoch_layer_coeff * self.dropout(
+    #             self.self_attn(x_q, x, x, mask)
+    #         )
+    #     if not self.normalize_before:
+    #         x = self.norm1(x)
+
+    #     residual = x
+    #     if self.normalize_before:
+    #         x = self.norm2(x)
+    #     x = residual + stoch_layer_coeff * self.dropout(self.feed_forward(x))
+    #     if not self.normalize_before:
+    #         x = self.norm2(x)
+
+    #     if cache is not None:
+    #         x = torch.cat([cache, x], dim=1)
+
+    #     return x, mask
+
+    def forward(self, x, mask):
         """Compute encoded features.
 
         Args:
@@ -71,49 +134,36 @@ class EncoderLayer(nn.Module):
             torch.Tensor: Mask tensor (#batch, 1, time).
 
         """
-        skip_layer = False
-        # with stochastic depth, residual connection `x + f(x)` becomes
-        # `x <- x + 1 / (1 - p) * f(x)` at training time.
-        stoch_layer_coeff = 1.0
-        if self.training and self.stochastic_depth_rate > 0:
-            skip_layer = torch.rand(1).item() < self.stochastic_depth_rate
-            stoch_layer_coeff = 1.0 / (1 - self.stochastic_depth_rate)
-
-        if skip_layer:
-            if cache is not None:
-                x = torch.cat([cache, x], dim=1)
-            return x, mask
-
-        residual = x
-        if self.normalize_before:
+        if not self.is_ATT_MLP_paralle:
+            residual = x
             x = self.norm1(x)
 
-        if cache is None:
-            x_q = x
-        else:
-            assert cache.shape == (x.shape[0], x.shape[1] - 1, self.size)
-            x_q = x[:, -1:, :]
-            residual = residual[:, -1:, :]
-            mask = None if mask is None else mask[:, -1:, :]
-
-        if self.concat_after:
-            x_concat = torch.cat((x, self.self_attn(x_q, x, x, mask)), dim=-1)
-            x = residual + stoch_layer_coeff * self.concat_linear(x_concat)
-        else:
-            x = residual + stoch_layer_coeff * self.dropout(
-                self.self_attn(x_q, x, x, mask)
+            x = residual + self.dropout(
+                self.self_attn(x, x, x, mask)
             )
-        if not self.normalize_before:
-            x = self.norm1(x)
 
-        residual = x
-        if self.normalize_before:
+            residual = x
             x = self.norm2(x)
-        x = residual + stoch_layer_coeff * self.dropout(self.feed_forward(x))
-        if not self.normalize_before:
-            x = self.norm2(x)
+            x = residual + self.dropout(self.feed_forward(x))
 
-        if cache is not None:
-            x = torch.cat([cache, x], dim=1)
+            return x, mask
+        
+        else:
+            residual=x
+            x_att=x
+            x_mlp=x
 
-        return x, mask
+            # ATT branch
+            x_att = self.norm1(x_att)
+            x_att = self.dropout(
+                self.self_attn(x_att, x_att, x_att, mask)
+            )
+
+            # MLP branch
+            x_mlp = self.norm1(x_mlp)
+            x_mlp = self.dropout(self.feed_forward(x_mlp))
+
+            # mergr two branch by feature averaging
+            x=residual+(x_att+x_mlp)/2
+
+            return x, mask

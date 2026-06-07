@@ -167,7 +167,7 @@ lm_fold_length=150         # fold_length for LM training.
 
 # added by QH
 whisper_language=
-local_data_dir= # to specify the local_*/data.sh for specific corpora
+local_data_dir=local # to specify the local_*/data.sh for specific corpora
 
 help_message=$(cat << EOF
 Usage: $0 --train-set "<train_set_name>" --valid-set "<valid_set_name>" --test_sets "<test_set_names>"

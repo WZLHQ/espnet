@@ -78,6 +78,7 @@ class TransformerEncoder(AbsEncoder):
         pos_enc_class=PositionalEncoding,
         pos_enc_layer_type="abs_pos",
         normalize_before: bool = True,
+        is_ATT_MLP_parallel: bool=False,
         concat_after: bool = False,
         positionwise_layer_type: str = "linear",
         positionwise_conv_kernel_size: int = 1,
@@ -199,6 +200,7 @@ class TransformerEncoder(AbsEncoder):
                 dropout_rate,
                 normalize_before,
                 concat_after,
+                is_ATT_MLP_parallel,
             ),
             layer_drop_rate,
         )

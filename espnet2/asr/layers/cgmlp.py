@@ -80,7 +80,6 @@ class ConvolutionalSpatialGatingUnit(torch.nn.Module):
         out = self.dropout(out)
         return out
 
-
 class ConvolutionalGatingMLP(torch.nn.Module):
     """Convolutional Gating MLP (cgMLP)."""
 
@@ -92,20 +91,34 @@ class ConvolutionalGatingMLP(torch.nn.Module):
         dropout_rate: float,
         use_linear_after_conv: bool,
         gate_activation: str,
+        using_glu: bool=False,
+        using_silu: bool=False,
     ):
         super().__init__()
 
         self.channel_proj1 = torch.nn.Sequential(
             torch.nn.Linear(size, linear_units), torch.nn.GELU()
         )
-        self.csgu = ConvolutionalSpatialGatingUnit(
-            size=linear_units,
-            kernel_size=kernel_size,
-            dropout_rate=dropout_rate,
-            use_linear_after_conv=use_linear_after_conv,
-            gate_activation=gate_activation,
-        )
-        self.channel_proj2 = torch.nn.Linear(linear_units // 2, size)
+
+        self.using_glu=using_glu
+        self.using_silu=using_silu
+        if using_glu:
+            self.glu=torch.nn.GLU()
+        elif using_silu:
+            self.silu=torch.nn.SiLU()
+        else:
+            self.csgu = ConvolutionalSpatialGatingUnit(
+                size=linear_units,
+                kernel_size=kernel_size,
+                dropout_rate=dropout_rate,
+                use_linear_after_conv=use_linear_after_conv,
+                gate_activation=gate_activation,
+            )
+            
+        if using_silu:
+            self.channel_proj2 = torch.nn.Linear(linear_units, size)
+        else:
+            self.channel_proj2 = torch.nn.Linear(linear_units // 2, size)
 
     def forward(self, x, mask):
         if isinstance(x, tuple):
@@ -114,7 +127,14 @@ class ConvolutionalGatingMLP(torch.nn.Module):
             xs_pad, pos_emb = x, None
 
         xs_pad = self.channel_proj1(xs_pad)  # size -> linear_units
-        xs_pad = self.csgu(xs_pad)  # linear_units -> linear_units/2
+        
+        if self.using_glu:
+            xs_pad=self.glu(xs_pad) # QH replaces csgu with glu
+        elif self.using_silu:
+            xs_pad=self.silu(xs_pad)
+        else:
+            xs_pad = self.csgu(xs_pad)  # linear_units -> linear_units/2
+
         xs_pad = self.channel_proj2(xs_pad)  # linear_units/2 -> size
 
         if pos_emb is not None:

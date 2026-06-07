@@ -49,20 +49,20 @@ if [ -z "${AISHELL}" ]; then
 fi
 
 
-log "Download data to ${AISHELL}"
-if [ ! -d "${AISHELL}" ]; then
-    mkdir -p "${AISHELL}"
-fi
-# To absolute path
-AISHELL=$(cd ${AISHELL}; pwd)
+# log "Download data to ${AISHELL}"
+# if [ ! -d "${AISHELL}" ]; then
+#     mkdir -p "${AISHELL}"
+# fi
+# # To absolute path
+# AISHELL=$(cd ${AISHELL}; pwd)
 
-echo local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" data_aishell
-local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" data_aishell
-echo local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" resource_aishell
-local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" resource_aishell
+# echo local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" data_aishell
+# local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" data_aishell
+# echo local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" resource_aishell
+# local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" resource_aishell
 
-aishell_audio_dir=${AISHELL}/data_aishell/wav
-aishell_text=${AISHELL}/data_aishell/transcript/aishell_transcript_v0.8.txt
+aishell_audio_dir=${AISHELL}/wav
+aishell_text=${AISHELL}/transcript/aishell_transcript_v0.8.txt
 
 log "Data Preparation"
 train_dir=data/local/train
@@ -101,16 +101,16 @@ for dir in $train_dir $dev_dir $test_dir; do
   utils/utt2spk_to_spk2utt.pl $dir/utt2spk > $dir/spk2utt
 done
 
-mkdir -p data/train data/dev data/test
+mkdir -p data/Aishell1_train data/Aishell1_valid data/Aishell1_test
 
 for f in spk2utt utt2spk wav.scp text; do
-  cp $train_dir/$f data/train/$f || exit 1;
-  cp $dev_dir/$f data/dev/$f || exit 1;
-  cp $test_dir/$f data/test/$f || exit 1;
+  cp $train_dir/$f data/Aishell1_train/$f || exit 1;
+  cp $dev_dir/$f data/Aishell1_valid/$f || exit 1;
+  cp $test_dir/$f data/Aishell1_test/$f || exit 1;
 done
 
 # remove space in text
-for x in train dev test; do
+for x in Aishell1_train Aishell1_valid Aishell1_test; do
   cp data/${x}/text data/${x}/text.org
   paste -d " " <(cut -f 1 -d" " data/${x}/text.org) <(cut -f 2- -d" " data/${x}/text.org | tr -d " ") \
       > data/${x}/text
