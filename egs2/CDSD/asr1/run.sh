@@ -62,8 +62,12 @@ set -o pipefail
 
 # ./run.sh Aishell1 FT conformer fasle A1 11 13 4 0 "" "" espnet_outputs ""; ./run.sh Aishell1 FT transformer fasle A1 11 13 4 0 "" "" espnet_outputs ""
 # ./run.sh Aishell1 FT e_branchformer fasle A1 11 13 4 1 "" "" espnet_outputs ""; ./run.sh Aishell1 FT branchformer fasle A4g 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A2_residual --encoder_conf kernel_size=15" "" espnet_outputs ""
+# ./run.sh Aishell1 FT e_branchformer fasle A2 11 13 4 1 "" "" espnet_outputs ""
 
+# ./run.sh Aishell1 FT transformer fasle A2 11 13 4 1 "--encoder_conf conv_after_mlp=true " "" espnet_outputs ""
+# ./run.sh Aishell1 FT transformer fasle A3 11 13 4 0 "--encoder_conf conv_after_att=true " "" espnet_outputs ""
 
+# 4090D: ./run.sh Aishell1 FT branchformer fasle A2 10 13 4 0 "--batch_bins 15000000 --optim_conf lr=0.003" "" espnet_outputs ""; ./run.sh Aishell1 FT branchformer fasle A3 11 13 4 0 "" "" espnet_outputs ""; ./run.sh Aishell1 FT branchformer fasle A1 11 13 4 0 "" "" espnet_outputs ""
 
 # [CDSD-partA, CDSD-partB] from CDSD
 # Aishell1

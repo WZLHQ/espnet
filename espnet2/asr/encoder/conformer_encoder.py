@@ -117,7 +117,7 @@ class ConformerEncoder(AbsEncoder):
         layer_drop_rate: float = 0.0,
         max_pos_emb_len: int = 5000,
         qk_norm: bool = False,
-        use_flash_attn: bool = True,
+        use_flash_attn: bool = False,
     ):
         super().__init__()
         self._output_size = output_size

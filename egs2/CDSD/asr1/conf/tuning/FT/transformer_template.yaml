@@ -12,6 +12,10 @@ encoder_conf:
     input_layer: conv2d # encoder architecture type
     normalize_before: true
     is_ATT_MLP_parallel: false
+    conv_after_att: false
+    conv_after_mlp: false
+    conv_type: A_residual
+    conv_kernel_size: 3
 
 # decoder related
 decoder: transformer

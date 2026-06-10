@@ -79,6 +79,10 @@ class TransformerEncoder(AbsEncoder):
         pos_enc_layer_type="abs_pos",
         normalize_before: bool = True,
         is_ATT_MLP_parallel: bool=False,
+        conv_after_att=False,
+        conv_after_mlp=False,
+        conv_type="A_residual",
+        conv_kernel_size=3,
         concat_after: bool = False,
         positionwise_layer_type: str = "linear",
         positionwise_conv_kernel_size: int = 1,
@@ -87,7 +91,7 @@ class TransformerEncoder(AbsEncoder):
         interctc_use_conditioning: bool = False,
         layer_drop_rate: float = 0.0,
         qk_norm: bool = False,
-        use_flash_attn: bool = True,
+        use_flash_attn: bool = False,
     ):
         super().__init__()
         self._output_size = output_size
@@ -201,6 +205,10 @@ class TransformerEncoder(AbsEncoder):
                 normalize_before,
                 concat_after,
                 is_ATT_MLP_parallel,
+                conv_after_att,
+                conv_after_mlp,
+                conv_type,
+                conv_kernel_size,
             ),
             layer_drop_rate,
         )

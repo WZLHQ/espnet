@@ -43,6 +43,11 @@ class EncoderLayer(nn.Module):
         normalize_before=True,
         concat_after=False,
         is_ATT_MLP_parallel=False,
+        conv_after_att=False,
+        conv_after_mlp=False,
+        conv_type="A_residual",
+        conv_kernel_size=3,
+
         stochastic_depth_rate=0.0,
     ):
         """Construct an EncoderLayer object."""
@@ -58,7 +63,20 @@ class EncoderLayer(nn.Module):
         if self.concat_after:
             self.concat_linear = nn.Linear(size + size, size)
         self.stochastic_depth_rate = stochastic_depth_rate
+
         self.is_ATT_MLP_paralle=is_ATT_MLP_parallel
+        self.conv_after_att=conv_after_att
+        self.conv_after_mlp=conv_after_mlp
+        self.conv_type=conv_type
+        if conv_after_att or conv_after_mlp:
+            if conv_type=="A_residual":
+                k=conv_kernel_size
+                self.depthwise_conv_module =torch.nn.Sequential(
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.SiLU(),
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.SiLU(),
+                )
 
     # original forward
     def forward(self, x, mask, cache=None):
@@ -87,6 +105,7 @@ class EncoderLayer(nn.Module):
                 x = torch.cat([cache, x], dim=1)
             return x, mask
 
+        # forward ATT
         residual = x
         if self.normalize_before:
             x = self.norm1(x)
@@ -108,13 +127,24 @@ class EncoderLayer(nn.Module):
             )
         if not self.normalize_before:
             x = self.norm1(x)
+        
+        if self.conv_after_att:
+            residual=x
+            x=self.depthwise_conv_module(x.transpose(1,2)).transpose(1,2)
+            x=residual+x
 
+        # forward MLP
         residual = x
         if self.normalize_before:
             x = self.norm2(x)
         x = residual + stoch_layer_coeff * self.dropout(self.feed_forward(x))
         if not self.normalize_before:
             x = self.norm2(x)
+
+        if self.conv_after_mlp:
+            residual=x
+            x=self.depthwise_conv_module(x.transpose(1,2)).transpose(1,2)
+            x=residual+x
 
         if cache is not None:
             x = torch.cat([cache, x], dim=1)

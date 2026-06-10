@@ -402,7 +402,7 @@ class BranchformerEncoder(AbsEncoder):
         conv_type: str="A",
         kernel_size: int=31,
         qk_norm: bool = False,
-        use_flash_attn: bool = True,
+        use_flash_attn: bool = False,
     ):
         super().__init__()
         self._output_size = output_size

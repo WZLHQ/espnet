@@ -253,7 +253,7 @@ class EBranchformerEncoder(AbsEncoder):
         interctc_layer_idx=None,
         interctc_use_conditioning: bool = False,
         qk_norm: bool = False,
-        use_flash_attn: bool = True,
+        use_flash_attn: bool = False,
         gradient_checkpoint_layers: List[int] = [],
     ):
         super().__init__()
