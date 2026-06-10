@@ -75,6 +75,7 @@ class BranchformerEncoderLayer(torch.nn.Module):
         conv_after_att: bool=False,
         conv_after_mlp: bool=False,
         conv_after_merge: bool=False,
+        conv_type: str="A",
         kernel_size: int=31,
     ):
         super().__init__()
@@ -102,13 +103,48 @@ class BranchformerEncoderLayer(torch.nn.Module):
         self.conv_after_att=conv_after_att
         self.conv_after_mlp=conv_after_mlp
         self.conv_after_merge=conv_after_merge
+        self.conv_type=conv_type
         if conv_after_att or conv_after_mlp or conv_after_merge:
-            self.depthwise_conv_aft_merge =torch.nn.Sequential(
-                torch.nn.Conv1d(size,size,3,stride=1,padding=(3 - 1) // 2,groups=size),
-                torch.nn.SiLU(),
-                torch.nn.Conv1d(size,size,3,stride=1,padding=(3 - 1) // 2,groups=size),
-                torch.nn.SiLU(),
-            )
+            if conv_type=="A_residual":
+                k=kernel_size
+                self.depthwise_conv_module =torch.nn.Sequential(
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.SiLU(),
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.SiLU(),
+                )
+            elif conv_type=="A1_residual":
+                k=kernel_size
+                self.depthwise_conv_module =torch.nn.Sequential(
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.SiLU(),
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.SiLU(),
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.SiLU(),
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.SiLU(),
+                )
+            elif conv_type=="A2_residual":
+                k=kernel_size
+                self.depthwise_conv_module =torch.nn.Sequential(
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.SiLU(),
+                )
+
+                
+            elif conv_type=="B_residual":
+                k=31
+                self.depthwise_conv_module =torch.nn.Sequential(
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                )
+            elif conv_type=="C_residual":
+                k=31
+                self.depthwise_conv_module =torch.nn.Sequential(
+                    torch.nn.LayerNorm(size),
+                    torch.nn.Conv1d(size,size,k,stride=1,padding=(k - 1) // 2,groups=size),
+                    torch.nn.ReLU(),
+                )
 
         if self.use_two_branches:
             if merge_method == "concat":
@@ -208,7 +244,7 @@ class BranchformerEncoderLayer(torch.nn.Module):
 
             if self.conv_after_att:
                 residual=x_att
-                x_att=self.depthwise_conv_aft_merge(x_att.transpose(1,2)).transpose(1,2)
+                x_att=self.depthwise_conv_module(x_att.transpose(1,2)).transpose(1,2)
                 x_att=residual+x_att
 
             x1 = self.dropout(x_att)
@@ -225,7 +261,7 @@ class BranchformerEncoderLayer(torch.nn.Module):
 
             if self.conv_after_mlp:
                 residual=x2
-                x2=self.depthwise_conv_aft_merge(x2.transpose(1,2)).transpose(1,2)
+                x2=self.depthwise_conv_module(x2.transpose(1,2)).transpose(1,2)
                 x2=residual+x2
 
             x2 = self.dropout(x2)
@@ -318,7 +354,7 @@ class BranchformerEncoderLayer(torch.nn.Module):
 
         if self.conv_after_merge:
             residual=x
-            x=self.depthwise_conv_aft_merge(x.transpose(1,2)).transpose(1,2)
+            x=self.depthwise_conv_module(x.transpose(1,2)).transpose(1,2)
             x=residual+x
 
         x = self.norm_final(x)
@@ -363,6 +399,7 @@ class BranchformerEncoder(AbsEncoder):
         conv_after_att: bool=False,
         conv_after_mlp: bool=False,
         conv_after_merge: bool=False,
+        conv_type: str="A",
         kernel_size: int=31,
         qk_norm: bool = False,
         use_flash_attn: bool = True,
@@ -565,6 +602,7 @@ class BranchformerEncoder(AbsEncoder):
                 conv_after_att,
                 conv_after_mlp,
                 conv_after_merge,
+                conv_type,
                 kernel_size,
             ),
         )

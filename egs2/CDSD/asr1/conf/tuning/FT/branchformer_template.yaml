@@ -27,6 +27,8 @@ encoder_conf:
     conv_after_att: false
     conv_after_mlp: false
     conv_after_merge: false
+    conv_type: A_residual
+    kernel_size: 3
 
 # decoder related
 decoder: transformer

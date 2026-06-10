@@ -51,6 +51,18 @@ set -o pipefail
 # ./run.sh Aishell1 FT branchformer fasle A3 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_mlp=true" "" espnet_outputs ""
 # ./run.sh Aishell1 FT branchformer fasle A5 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_att=true" "" espnet_outputs ""
 
+# ./run.sh Aishell1 FT branchformer fasle A6 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A1_residual" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A7 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A2_residual" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A4a 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A4b 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A4c 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=31" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A4d 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A2_residual --encoder_conf kernel_size=3" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A4f 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A2_residual --encoder_conf kernel_size=7" "" espnet_outputs ""
+# ./run.sh Aishell1 FT branchformer fasle A4g 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A2_residual --encoder_conf kernel_size=15" "" espnet_outputs ""
+
+# ./run.sh Aishell1 FT conformer fasle A1 11 13 4 0 "" "" espnet_outputs ""; ./run.sh Aishell1 FT transformer fasle A1 11 13 4 0 "" "" espnet_outputs ""
+# ./run.sh Aishell1 FT e_branchformer fasle A1 11 13 4 1 "" "" espnet_outputs ""; ./run.sh Aishell1 FT branchformer fasle A4g 11 13 4 1 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A2_residual --encoder_conf kernel_size=15" "" espnet_outputs ""
+
 
 
 # [CDSD-partA, CDSD-partB] from CDSD
