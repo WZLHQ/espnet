@@ -67,7 +67,23 @@ set -o pipefail
 # ./run.sh Aishell1 FT transformer fasle A2 11 13 4 1 "--encoder_conf conv_after_mlp=true " "" espnet_outputs ""
 # ./run.sh Aishell1 FT transformer fasle A3 11 13 4 0 "--encoder_conf conv_after_att=true " "" espnet_outputs ""
 
-# 4090D: ./run.sh Aishell1 FT branchformer fasle A2 10 13 4 0 "--batch_bins 15000000 --optim_conf lr=0.003" "" espnet_outputs ""; ./run.sh Aishell1 FT branchformer fasle A3 11 13 4 0 "" "" espnet_outputs ""; ./run.sh Aishell1 FT branchformer fasle A1 11 13 4 0 "" "" espnet_outputs ""
+# 4090D: ./run.sh Aishell1 FT branchformer fasle A1 11 13 4 0 "--optim_conf lr=0.0005" "" espnet_outputs ""; ./run.sh Aishell1 FT branchformer fasle A3 11 13 4 0 "--optim_conf lr=0.001" "" espnet_outputs ""; ./run.sh Aishell1 FT branchformer fasle A2 11 13 4 0 "--optim_conf lr=0.002" "" espnet_outputs ""
+# 4090D: ./run.sh Aishell1 FT branchformer fasle A4 11 13 4 0 "--optim_conf lr=0.002 --scheduler_conf warmup_steps=3200" "" espnet_outputs ""
+# 4090D poor: ./run.sh Aishell1 FT branchformer fasle A5 11 13 4 0 "--optim_conf lr=0.001 --scheduler_conf warmup_steps=3200" "" espnet_outputs "" 
+# 4090D poor: ./run.sh Aishell1 FT branchformer fasle A6 11 13 4 0 "--optim_conf lr=0.0005 --scheduler_conf warmup_steps=3200" "" espnet_outputs ""
+# 4090D: not bad./run.sh Aishell1 FT branchformer fasle A7 11 13 4 0 "--optim_conf lr=0.0002 --scheduler_conf warmup_steps=3200" "" espnet_outputs ""
+# 4090D poor./run.sh Aishell1 FT branchformer fasle A8 11 13 4 0 "--optim_conf lr=0.001 --scheduler_conf warmup_steps=100" "" espnet_outputs ""
+# 4090D no scheduler ./run.sh Aishell1 FT branchformer fasle A9 11 13 4 0 "--optim_conf lr=0.001" "" espnet_outputs ""
+# 4090D good ./run.sh Aishell1 FT branchformer fasle A10 11 13 4 0 "" "" espnet_outputs ""
+# 4090D poor: ./run.sh Aishell1 FT branchformer fasle A11 11 13 4 0 "--optim_conf lr=0.002" "" espnet_outputs ""
+# 4090D poor./run.sh Aishell1 FT branchformer fasle A12 11 13 4 0 "--optim_conf lr=0.0015" "" espnet_outputs ""
+# 4090D good ./run.sh Aishell1 FT branchformer fasle A13 11 13 4 0 "--scheduler_conf warmup_steps=50000" "" espnet_outputs ""
+# 4090D poor ./run.sh Aishell1 FT branchformer fasle A14 11 13 4 0 "--scheduler_conf warmup_steps=15000" "" espnet_outputs ""
+# 4090D ./run.sh Aishell1 FT branchformer fasle A15 11 13 4 0 "--encoder_conf merge_method=averaging" "" espnet_outputs ""
+# 4090D ./run.sh Aishell1 FT branchformer fasle A16 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7" "" espnet_outputs ""
+# 4090D ./run.sh Aishell1 FT branchformer fasle A17 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=15" "" espnet_outputs ""
+# 4090D ./run.sh Aishell1 FT branchformer fasle A18 12 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true" "" espnet_outputs ""
+
 
 # [CDSD-partA, CDSD-partB] from CDSD
 # Aishell1

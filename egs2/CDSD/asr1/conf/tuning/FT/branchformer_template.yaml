@@ -29,6 +29,7 @@ encoder_conf:
     conv_after_merge: false
     conv_type: A_residual
     kernel_size: 3
+    is_att2mlp: false
 
 # decoder related
 decoder: transformer
@@ -49,7 +50,7 @@ model_conf:
 
 # minibatch related
 batch_type: numel
-batch_bins: 10000000 # 25000000
+batch_bins: 6250000
 
 # plot related
 use_matplotlib: true
@@ -74,7 +75,7 @@ optim_conf:
    weight_decay: 0.000001
 scheduler: warmuplr
 scheduler_conf:
-   warmup_steps: 15000
+   warmup_steps: 35000
 
 num_workers: 4      # num of workers of data loader
 use_amp: true      # automatic mixed precision

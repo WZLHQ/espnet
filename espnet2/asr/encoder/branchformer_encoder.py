@@ -77,6 +77,7 @@ class BranchformerEncoderLayer(torch.nn.Module):
         conv_after_merge: bool=False,
         conv_type: str="A",
         kernel_size: int=31,
+        is_att2mlp: bool=False,
     ):
         super().__init__()
         assert (attn is not None) or (
@@ -100,6 +101,7 @@ class BranchformerEncoderLayer(torch.nn.Module):
 
         self.dropout = torch.nn.Dropout(dropout_rate)
 
+        self.is_att2mlp=is_att2mlp
         self.conv_after_att=conv_after_att
         self.conv_after_mlp=conv_after_mlp
         self.conv_after_merge=conv_after_merge
@@ -248,6 +250,10 @@ class BranchformerEncoderLayer(torch.nn.Module):
                 x_att=residual+x_att
 
             x1 = self.dropout(x_att)
+
+        # whether pass ATT output to MLp
+        if self.is_att2mlp:
+            x2=x2+x1
 
         # Branch 2: convolutional gating mlp
         if self.cgmlp is not None:
@@ -401,6 +407,7 @@ class BranchformerEncoder(AbsEncoder):
         conv_after_merge: bool=False,
         conv_type: str="A",
         kernel_size: int=31,
+        is_att2mlp: bool=False,
         qk_norm: bool = False,
         use_flash_attn: bool = False,
     ):
@@ -604,6 +611,7 @@ class BranchformerEncoder(AbsEncoder):
                 conv_after_merge,
                 conv_type,
                 kernel_size,
+                is_att2mlp,
             ),
         )
         self.after_norm = LayerNorm(output_size)
