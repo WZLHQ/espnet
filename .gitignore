@@ -132,3 +132,4 @@ egs2/pefts/asr1/run_log.sh
 tools/whisper
 tools/LoRA
 egs2/pefts/asr1/CDSD
+egs2/CDSD/asr1
