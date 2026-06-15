@@ -83,7 +83,12 @@ set -o pipefail
 # 4090D ./run.sh Aishell1 FT branchformer fasle A16 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7" "" espnet_outputs ""
 # 4090D ./run.sh Aishell1 FT branchformer fasle A17 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=15" "" espnet_outputs ""
 # 4090D ./run.sh Aishell1 FT branchformer fasle A18 12 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true" "" espnet_outputs ""
+# 4090D ./run.sh Aishell1 FT branchformer fasle A19 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true" "" espnet_outputs ""
+# 4090D ./run.sh Aishell1 FT branchformer fasle A20 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true" "" espnet_outputs ""
+# 4090D ./run.sh Aishell1 FT branchformer fasle A21 11 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true --encoder_conf cgmlp_linear_units=5120 --encoder_conf num_blocks=12" "" espnet_outputs ""
 
+# ./run.sh Aishell1 FT conformer fasle A1 11 13 4 0 "" "" espnet_outputs ""
+# ./run.sh Aishell1 FT e_branchformer fasle A1 11 13 4 0 "" "" espnet_outputs ""
 
 # [CDSD-partA, CDSD-partB] from CDSD
 # Aishell1

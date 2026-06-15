@@ -253,7 +253,9 @@ class BranchformerEncoderLayer(torch.nn.Module):
 
         # whether pass ATT output to MLp
         if self.is_att2mlp:
-            x2=x2+x1
+            # 实测直接相加的方式能获得更好的dev acc，但是最终cer上是一样的
+            # 后续实验倾向直接相加，而不是取平均
+            x2=(x2+x1)/2
 
         # Branch 2: convolutional gating mlp
         if self.cgmlp is not None:
