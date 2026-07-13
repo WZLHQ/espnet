@@ -27,9 +27,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
         use_specaug: bool = False,
         specaug_conf: Union[dict, None] = None,
         do_pad_trim: bool = False,
-        adapter_type=None,
-        adapter_dim=35,
-        peg_adapter_num=3,
+        n_mels=None,
     ):
         try:
             import whisper
@@ -47,7 +45,10 @@ class OpenAIWhisperEncoder(AbsEncoder):
         self.n_fft = N_FFT
         self.win_length = N_FFT
         self.hop_length = HOP_LENGTH
-        self.n_mels = N_MELS
+        # if n_mels is given, use it; otherwise, use the default N_MELS from whisper
+        # this strategy allows use different whsper models with different n_mels:
+        # n_mels=128 is specified for whisper large-v3 and newer models, otherwise use the default N_MELS for other whisper models.
+        self.n_mels = N_MELS if n_mels is None else n_mels
 
         self.mel_filters = whisper.audio.mel_filters
 
@@ -56,7 +57,7 @@ class OpenAIWhisperEncoder(AbsEncoder):
 
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu", adapter_type=adapter_type, adapter_dim=adapter_dim, peg_adapter_num=peg_adapter_num
+            whisper_model, download_root=download_dir, device="cpu"
         )
         self.encoders = copy.deepcopy(_model.encoder)
         self.encoders.train()

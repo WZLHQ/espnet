@@ -45,7 +45,7 @@ from espnet2.schedulers.piecewise_linear_warmup_lr import PiecewiseLinearWarmupL
 from espnet2.schedulers.warmup_lr import WarmupLR
 from espnet2.schedulers.warmup_reducelronplateau import WarmupReduceLROnPlateau
 from espnet2.schedulers.warmup_step_lr import WarmupStepLR
-from espnet2.torch_utils.load_pretrained_model import load_pretrained_model
+from espnet2.torch_utils.load_pretrained_model import load_pretrained_model,cat_then_load_lora_experts
 from espnet2.torch_utils.model_summary import model_summary
 from espnet2.torch_utils.pytorch_version import pytorch_cudnn_version
 from espnet2.torch_utils.set_all_random_seed import set_all_random_seed
@@ -263,6 +263,7 @@ _8best_models={
     "CDSD-partA-spk38": ["CDSD-partA-spk04","CDSD-partA-spk05","CDSD-partA-spk07","CDSD-partA-spk12","CDSD-partA-spk13","CDSD-partA-spk14","CDSD-partA-spk23","CDSD-partA-spk42"],
     "CDSD-partA-spk42": ["CDSD-partA-spk04","CDSD-partA-spk05","CDSD-partA-spk07","CDSD-partA-spk12","CDSD-partA-spk13","CDSD-partA-spk14","CDSD-partA-spk23","CDSD-partA-spk38"],
 }
+# ["US","UK","IND","CHN","JPN","PT","RU","KR","CA","ES"],
 _9best_models={
     "Libri360-spk210": ["Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
     "Libri360-spk3389": ["Libri360-spk210","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk2388","Libri360-spk6458"],
@@ -274,7 +275,19 @@ _9best_models={
     "Libri360-spk492": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk2388","Libri360-spk6458"],
     "Libri360-spk2388": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk6458"],
     "Libri360-spk6458": ["Libri360-spk210","Libri360-spk3389","Libri360-spk2368","Libri360-spk3615","Libri360-spk479","Libri360-spk525","Libri360-spk6553","Libri360-spk492","Libri360-spk2388"],
+    "US": ["UK","IND","CHN","JPN","PT","RU","KR","CA","ES"],
+    "UK": ["US","IND","CHN","JPN","PT","RU","KR","CA","ES"],
+    "IND":["US","UK","CHN","JPN","PT","RU","KR","CA","ES"],
+    "CHN":["US","UK","IND","JPN","PT","RU","KR","CA","ES"],
+    "JPN":["US","UK","IND","CHN","PT","RU","KR","CA","ES"],
+    "PT": ["US","UK","IND","CHN","JPN","RU","KR","CA","ES"],
+    "RU": ["US","UK","IND","CHN","JPN","PT","KR","CA","ES"],
+    "KR": ["US","UK","IND","CHN","JPN","PT","RU","CA","ES"],
+    "CA": ["US","UK","IND","CHN","JPN","PT","RU","KR","ES"],
+    "ES": ["US","UK","IND","CHN","JPN","PT","RU","KR","CA"],
 }
+
+
 Nbest_map = {
     "1best": _1best_models,
     "3best": _3best_models,
@@ -1471,6 +1484,9 @@ class AbsTask(ABC):
 
             # Use adapter to finetune the large pre-trained foundation models
             if getattr(args, "use_adapter", False):
+
+                key_for_whisper_type=args.encoder_conf["whisper_model"].split(".")[0].replace("-", "_")
+
                 if args.adapter in ['dictlora4velora','dictlora4fastervelora','dictlora4lanfusion','dictlora4cat','dictlora4pcam','dictlora4samd','dictlora4mole']:
                     Nbest = Nbest_map.get(args.adapter_conf["Nbest"])
                     args.adapter_conf["key_name_list"]=Nbest[args.adapter_conf["domain"]]
@@ -1483,14 +1499,14 @@ class AbsTask(ABC):
 
                     for k in args.adapter_conf["key_name_list"]:
                         # NOTE please specify the format_func according to your patterns of args.adapter_conf["expert_path"] 
-                        args.init_param.append(args.adapter_conf["expert_path"].format(k,args.encoder_conf["whisper_model"].split(".")[0],k))
+                        args.init_param.append(args.adapter_conf["expert_path"].format(k,key_for_whisper_type,k))
                         
                 elif args.adapter=="dictlora4ecam":
                     Nbest = Nbest_map.get(args.adapter_conf["Nbest"])
                     experts_list = Nbest[args.adapter_conf["domain"]]
                     for expert in experts_list:
                         # NOTE please specify the format_func according to your patterns of args.adapter_conf["expert_path"] 
-                        args.init_param.append(args.adapter_conf["expert_path"].format(expert,args.encoder_conf["whisper_model"].split(".")[0],expert))
+                        args.init_param.append(args.adapter_conf["expert_path"].format(expert,key_for_whisper_type,expert))
                 
                 elif args.adapter in ["dictlora","vera"]:
                     # nothing to do with dictlora and vera
@@ -1612,27 +1628,34 @@ class AbsTask(ABC):
                 write_collected_feats=args.write_collected_feats,
             )
         else:
-            uniform_soup=None
-            # 6. Loads pre-trained model
-            for id, p in enumerate(args.init_param):
-                logging.info(f"Loading pretrained params from {p}")
-                uniform_soup=load_pretrained_model(
+            if args.adapter=="dictlora4velora" or args.adapter=="dictlora4fastervelora" or args.adapter=="dictlora4lanfusion":
+                cat_then_load_lora_experts(
+                    init_param=args.init_param,
                     model=model,
-                    init_param=p,
-                    ignore_init_mismatch=args.ignore_init_mismatch,
-                    id=id,
-                    # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
-                    #   in PyTorch<=1.4
-                    map_location=(
-                        f"cuda:{torch.cuda.current_device()}"
-                        if args.ngpu > 0
-                        else "cpu"
-                    ),
-                    adapter_type= args.adapter if getattr(args, "use_adapter", False) else None,
-                    num_models=len(args.init_param)-1,
-                    src_experts_key_name= args.adapter_conf["domain"] if getattr(args, "use_adapter", False) and args.adapter=="dictlora4ecam" else None,
-                    uniform_soup=uniform_soup,
+                    ngpu=args.ngpu,
                 )
+            else:
+                uniform_soup=None
+                # 6. Loads pre-trained model
+                for id, p in enumerate(args.init_param):
+                    logging.info(f"Loading pretrained params from {p}")
+                    uniform_soup=load_pretrained_model(
+                        model=model,
+                        init_param=p,
+                        ignore_init_mismatch=args.ignore_init_mismatch,
+                        id=id,
+                        # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
+                        #   in PyTorch<=1.4
+                        map_location=(
+                            f"cuda:{torch.cuda.current_device()}"
+                            if args.ngpu > 0
+                            else "cpu"
+                        ),
+                        adapter_type= args.adapter if getattr(args, "use_adapter", False) else None,
+                        num_models=len(args.init_param)-1,
+                        src_experts_key_name= args.adapter_conf["domain"] if getattr(args, "use_adapter", False) and args.adapter=="dictlora4ecam" else None,
+                        uniform_soup=uniform_soup,
+                    )
 
             # 7. Build iterator factories
             if args.multiple_iterator:
@@ -2489,26 +2512,33 @@ class AbsTask(ABC):
             # generally, we only save the trainable parameters, e.g., lora modules.
             # Therefore the bulit model should be initialized again when use_adapter=True
             
-            uniform_soup=None
-            for id, p in enumerate(args.init_param):
-                logging.info(f"Loading pretrained params from {p}")
-                uniform_soup=load_pretrained_model(
+            if args.adapter=="dictlora4velora" or args.adapter=="dictlora4fastervelora" or args.adapter=="dictlora4lanfusion":
+                cat_then_load_lora_experts(
+                    init_param=args.init_param,
                     model=model,
-                    init_param=p,
-                    ignore_init_mismatch=args.ignore_init_mismatch,
-                    id=id,
-                    # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
-                    #   in PyTorch<=1.4
-                    map_location=(
-                        f"cuda:{torch.cuda.current_device()}"
-                        if args.ngpu > 0
-                        else "cpu"
-                    ),
-                    adapter_type= args.adapter if getattr(args, "use_adapter", False) else None,
-                    num_models=len(args.init_param)-1,
-                    src_experts_key_name= args.adapter_conf["domain"] if getattr(args, "use_adapter", False) and args.adapter=="dictlora4ecam" else None,
-                    uniform_soup=uniform_soup,
+                    ngpu=args.ngpu,
                 )
+            else:
+                uniform_soup=None
+                for id, p in enumerate(args.init_param):
+                    logging.info(f"Loading pretrained params from {p}")
+                    uniform_soup=load_pretrained_model(
+                        model=model,
+                        init_param=p,
+                        ignore_init_mismatch=args.ignore_init_mismatch,
+                        id=id,
+                        # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
+                        #   in PyTorch<=1.4
+                        map_location=(
+                            f"cuda:{torch.cuda.current_device()}"
+                            if args.ngpu > 0
+                            else "cpu"
+                        ),
+                        adapter_type= args.adapter if getattr(args, "use_adapter", False) else None,
+                        num_models=len(args.init_param)-1,
+                        src_experts_key_name= args.adapter_conf["domain"] if getattr(args, "use_adapter", False) and args.adapter=="dictlora4ecam" else None,
+                        uniform_soup=uniform_soup,
+                    )
 
             # this is for test-time LoRA merge, args.adapter should be DictLoRA4LanFusion
             # model_file=None

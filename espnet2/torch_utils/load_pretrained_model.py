@@ -143,3 +143,43 @@ def load_pretrained_model(
     obj.load_state_dict(dst_state)
 
     return None
+
+def cat_then_load_lora_experts(
+    init_param: list,
+    model: torch.nn.Module,
+    ngpu: int,
+    ignore_init_mismatch: bool=False,
+):
+    logging.info(f"Loading base model")
+    # 0. load the librispeech100-finetuned model or original model
+    src_state=torch.load(init_param[0], map_location=f"cuda:{torch.cuda.current_device()}" if ngpu > 0 else "cpu")
+    model.load_state_dict(src_state, strict=ignore_init_mismatch)
+    init_param.pop(0)
+
+    logging.info(f"Loading cated expert")
+    # 1. get src expert state
+    expert_state_list=[]
+    for p in init_param:
+        src_state = torch.load(p, map_location=f"cuda:{torch.cuda.current_device()}" if ngpu > 0 else "cpu")
+        src_state = {k.split("lora_A")[0]+"lora_A" if "lora_A" in k else k : v for k, v in src_state.items()}
+        src_state = {k.split("lora_B")[0]+"lora_B" if "lora_B" in k else k : v for k, v in src_state.items()}
+        expert_state_list.append(src_state)
+
+    # 2. get dst model state
+    dst_state=model.state_dict()
+    dst_state={k:v for k,v in dst_state.items() if "kid" not in k}
+    dst_state={k:v for k,v in dst_state.items() if "lora_A" in k or "lora_B" in k}
+
+    # 3. cat each expert weight and cover the original weight
+    for dst_key in dst_state.keys():
+        expert_params = [expert_state[dst_key] for expert_state in expert_state_list]
+
+        if 'lora_A' in dst_key:
+            # lora_A shape: [r, in_features] -> cat at dim=0
+            dst_state[dst_key] = torch.cat(expert_params, dim=0)
+        elif 'lora_B' in dst_key:
+            # lora_B shape: [out_features, r] -> cat at dim=1
+            dst_state[dst_key] = torch.cat(expert_params, dim=1)
+
+    # 4. load the cated weight
+    model.load_state_dict(dst_state, strict=ignore_init_mismatch)

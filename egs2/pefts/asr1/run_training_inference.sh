@@ -101,7 +101,7 @@ do
         whisper_language=en
       else
         token_type=whisper_multilingual
-        if [[ "$sub" == "Librilight10" ]] || [[ "$sub" == *"Librispeech"* ]] ; then
+        if [[ "$sub" == "Librilight10" ]] || [[ "$sub" == *"Librispeech"* ]] || [[ "$sub" =~ ^(US|UK|IND|CHN|JPN|PT|RU|KR|CA|ES)$ ]]; then
           whisper_language=en
         elif [[ "$sub" == *"CDSD"* ]]; then
           whisper_language=zh
@@ -138,8 +138,8 @@ do
       # test_set="Librispeech_valid_clean Librispeech_valid_other Librispeech_test_clean Librispeech_test_other"
       test_set="Librispeech_valid_clean Librispeech_test_clean"
     else
-      test_set="${sub}_valid ${sub}_test"
-      # test_set="${sub}_test"
+      # test_set="${sub}_valid ${sub}_test"
+      test_set="${sub}_test"
     fi
   else
     test_set=$specify_test_set

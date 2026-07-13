@@ -53,9 +53,6 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
         whisper_model: str = "small",
         download_dir: Optional[str] = None,
         load_origin_token_embedding=False,
-        adapter_type=None,
-        adapter_dim=35,
-        peg_adapter_num=3,
     ):
         try:
             import whisper
@@ -71,7 +68,7 @@ class OpenAIWhisperDecoder(AbsDecoder, BatchScorerInterface):
 
         assert whisper_model in whisper.available_models()
         _model = whisper.load_model(
-            whisper_model, download_root=download_dir, device="cpu", adapter_type=adapter_type, adapter_dim=adapter_dim, peg_adapter_num=peg_adapter_num
+            whisper_model, download_root=download_dir, device="cpu"
         )
         self.decoders = copy.deepcopy(_model.decoder)
         attention_dim = self.decoders.token_embedding.embedding_dim
