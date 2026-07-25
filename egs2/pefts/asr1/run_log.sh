@@ -681,3 +681,55 @@ domains=("US" "UK" "IND" "CHN" "JPN" "PT" "RU" "KR" "CA" "ES")
 for domain in "${domains[@]}"; do
     ./run_training_inference.sh "$domain" DictLoRA4LanFusion whisper large_v2 R32_5best_A1 12 13 1 0 "--adapter_conf domain=$domain --adapter_conf Nbest=5best" espnet_outputs_1 ""
 done
+
+
+domains=("US")
+for domain in "${domains[@]}"; do
+    ./run_training_inference.sh "$domain" DictLoRA4VeLoRA whisper base_en R32_7best_efficiency 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best" espnet_outputs_1 ""
+done
+
+# code for efficiency studies
+domains=("US")
+for domain in "${domains[@]}"; do
+    ./run_training_inference.sh "$domain" FT whisper medium_en FT_efficiency 10 13 3 0 "--model_conf trainable_target_name=query.weight,key.weight,value.weight,out.weight,mlp.0.weight,mlp.2.weight --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA whisper medium_en lora_efficiency 11 13 3 0 "--adapter_conf key_name=$domain --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4MOLE whisper medium_en mole_efficiency 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4CAT whisper medium_en cat_efficiency 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4LanFusion whisper medium_en lanfusion_efficiency 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4PCAM whisper medium_en pcam_efficiency 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4ECAM whisper medium_en ecam_efficiency 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4SAMD whisper medium_en samd_efficiency 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4VeLoRA whisper medium_en velora_efficiency 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4FasterVeLoRA whisper medium_en fastervelora_efficiency 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+done
+
+domains=("US")
+for domain in "${domains[@]}"; do
+    ./run_training_inference.sh "$domain" DictLoRA4LanFusion whisper medium_en lanfusion_efficiency 12 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --batch_size 8 --valid_batch_size 8 --max_epoch 10 --patience 2" espnet_outputs_1 ""
+done
+
+domains=("US" "UK" "IND" "CHN" "JPN" "PT" "RU" "KR" "CA" "ES")
+for domain in "${domains[@]}"; do
+    ./run_training_inference.sh "$domain" DictLoRA4VeLoRA whisper base_en R8_7best_A1 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --adapter_conf rank=8 --adapter_conf expert_path=espnet_outputs/{}_whisper_DictLoRA_outputs/asr_DictLoRA_whisper-{}_en_{}-A0/valid.acc.ave_3best.pth" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4FasterVeLoRA whisper base_en R8_7best_A1 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --adapter_conf rank=8 --adapter_conf expert_path=espnet_outputs/{}_whisper_DictLoRA_outputs/asr_DictLoRA_whisper-{}_en_{}-A0/valid.acc.ave_3best.pth" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4VeLoRA whisper base_en R64_7best_A1 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --adapter_conf rank=64 --adapter_conf expert_path=espnet_outputs/{}_whisper_DictLoRA_outputs/asr_DictLoRA_whisper-{}_en_{}-A2/valid.acc.ave_3best.pth" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4FasterVeLoRA whisper base_en R64_7best_A1 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=7best --adapter_conf rank=64 --adapter_conf expert_path=espnet_outputs/{}_whisper_DictLoRA_outputs/asr_DictLoRA_whisper-{}_en_{}-A2/valid.acc.ave_3best.pth" espnet_outputs_1 ""
+done
+
+domains=(CDSD-partA-spk04 CDSD-partA-spk05 CDSD-partA-spk07 CDSD-partA-spk12 CDSD-partA-spk13 CDSD-partA-spk14 CDSD-partA-spk23 CDSD-partA-spk38 CDSD-partA-spk42)
+backbone=base
+Nbest=8best
+for domain in "${domains[@]}"; do
+    ./run_training_inference.sh "$domain" DictLoRA4FasterVeLoRA whisper $backbone CDSD_A_R32_8best_A3 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=$Nbest" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4VeLoRA whisper $backbone CDSD_A_R32_8best_A2 10 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=$Nbest" espnet_outputs_1 ""
+done
+
+# TODO
+domains=(CDSD-partA-spk04 CDSD-partA-spk05 CDSD-partA-spk07 CDSD-partA-spk12 CDSD-partA-spk13 CDSD-partA-spk14 CDSD-partA-spk23 CDSD-partA-spk38 CDSD-partA-spk42)
+backbone=base
+Nbest=8best
+for domain in "${domains[@]}"; do
+    # ./run_training_inference.sh "$domain" DictLoRA4FasterVeLoRA whisper $backbone CDSD_A_R32_8best_A4 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=$Nbest --optim_conf lr=0.1 --scheduler_conf warmup_steps=1" espnet_outputs_1 ""
+    # ./run_training_inference.sh "$domain" DictLoRA4FasterVeLoRA whisper $backbone CDSD_A_R32_8best_A5 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=$Nbest --optim_conf lr=0.01 --scheduler_conf warmup_steps=1" espnet_outputs_1 ""
+    ./run_training_inference.sh "$domain" DictLoRA4FasterVeLoRA whisper $backbone CDSD_A_R32_8best_A6 11 13 3 0 "--adapter_conf domain=$domain --adapter_conf Nbest=$Nbest --optim_conf lr=0.008 --scheduler_conf warmup_steps=1" espnet_outputs_1 ""
+done
