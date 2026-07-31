@@ -17,7 +17,7 @@ use_lm=false
 use_wordlm=false
 
 ./asr.sh \
-    --stage 5 \
+    --stage 0 \
     --stop_stage 5 \
     --nj 8 \
     --inference_nj 32 \
@@ -34,6 +34,7 @@ use_wordlm=false
     --train_set "${train_set}"                         \
     --valid_set "${valid_set}"                         \
     --test_sets "${test_sets}"                         \
+    --speed_perturb_factors "0.9 1.0 1.1" \
     --asr_speech_fold_length 512 \
     --asr_text_fold_length 150 \
     --lm_fold_length 150 \

@@ -90,6 +90,16 @@ set -o pipefail
 # ./run.sh Aishell1 FT conformer fasle A1 11 13 4 0 "" "" espnet_outputs ""
 # ./run.sh Aishell1 FT e_branchformer fasle A1 11 13 4 0 "" "" espnet_outputs ""
 
+
+# ./run.sh Aishell1 FT branchformer fasle spA1 12 13 4 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true" "" espnet_outputs "" true
+# ./run.sh Aishell1 FT branchformer fasle spA2 11 13 3 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true --batch_bins 15000000" "" espnet_outputs "" true
+# ./run.sh Aishell1 FT branchformer fasle spA3 11 13 3 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true --batch_bins 15000000 --optim_conf lr=0.0005 --scheduler_conf warmup_steps=70000" "" espnet_outputs "" true
+# ./run.sh Aishell1 FT branchformer fasle spA4 11 13 3 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true --batch_bins 15000000 --optim_conf lr=0.002" "" espnet_outputs "" true
+
+# ./run.sh Aishell1 FT branchformer fasle spA5 11 13 3 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true" "" espnet_outputs "" true
+# ./run.sh Aishell1 FT branchformer fasle spA5_TEST 10 13 3 0 "--encoder_conf using_glu=true --encoder_conf merge_method=averaging --encoder_conf conv_after_merge=true --encoder_conf conv_type=A_residual --encoder_conf kernel_size=7 --encoder_conf is_att2mlp=true" "" espnet_outputs "" true
+
+
 # [CDSD-partA, CDSD-partB] from CDSD
 # Aishell1
 subcorpus=$1
@@ -128,6 +138,9 @@ explink=${12}
 # specify test sets
 specify_test_set=${13}
 
+# whether to use speed perturbation, default is false
+use_sp=${14:-false}
+
 # 检查软连接是否存在
 if [ ! -d "espnet_outputs" ]; then
   # 如果文件夹不存在，则创建文件夹
@@ -145,7 +158,7 @@ inference_lm=valid.loss.ave.pth
 # decoding args
 cleaner=none # only whisper needs cleaner
 decode_batch_size=1 # untill now, espnet only suport decode batch size 1
-inference_config="conf/decoding/decode_asr.yaml"
+inference_config="conf/decoding/decode_asr_branchformer.yaml" # decode_asr_branchformer.yaml / decode_asr.yaml
 nbpe=1 # depends the backbone model
 
 for sub in ${subcorpus}
@@ -205,8 +218,15 @@ do
   fi
 
   # dataset
-  train_set="${sub}_train"
+  if [[ "$use_sp" == "true" ]]; then
+      train_set="${sub}_train_sp"
+      speed_perturb_factors="0.9 1.0 1.1"
+  else
+      train_set="${sub}_train"
+      speed_perturb_factors=""
+  fi
   train_dev="${sub}_valid"
+
   if [[ "${specify_test_set}" == "" ]]; then
     if [[ "${sub}" == *"Libri"* ]]; then
       # test_set="${sub}_valid_clean ${sub}_valid_other ${sub}_test_clean ${sub}_test_other"

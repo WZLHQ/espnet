@@ -50,7 +50,7 @@ model_conf:
 
 # minibatch related
 batch_type: numel
-batch_bins: 6250000
+batch_bins: 15000000
 
 # plot related
 use_matplotlib: true

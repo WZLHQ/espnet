@@ -56,13 +56,13 @@ fi
 # # To absolute path
 # AISHELL=$(cd ${AISHELL}; pwd)
 
-# echo local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" data_aishell
-# local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" data_aishell
-# echo local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" resource_aishell
-# local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" resource_aishell
+echo local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" data_aishell
+local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" data_aishell
+echo local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" resource_aishell
+local/download_and_untar.sh ${download_opt} "${AISHELL}" "${data_url}" resource_aishell
 
-aishell_audio_dir=${AISHELL}/wav
-aishell_text=${AISHELL}/transcript/aishell_transcript_v0.8.txt
+aishell_audio_dir=${AISHELL}/data_aishell/wav
+aishell_text=${AISHELL}/data_aishell/transcript/aishell_transcript_v0.8.txt
 
 log "Data Preparation"
 train_dir=data/local/train
